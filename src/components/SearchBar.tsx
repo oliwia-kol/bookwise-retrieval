@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Search, Clock, X } from 'lucide-react';
+import { Search, Clock, X, Command } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ export function SearchBar({
   recentQueries = [] 
 }: SearchBarProps) {
   const [showHistory, setShowHistory] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -40,55 +41,86 @@ export function SearchBar({
 
   return (
     <div className="relative w-full">
-      <div className="relative flex items-center">
-        <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+      <div className={cn(
+        "relative flex items-center rounded-xl transition-all duration-300",
+        isFocused && "glow-primary"
+      )}>
+        <Search className={cn(
+          "absolute left-4 h-4 w-4 transition-colors",
+          isFocused ? "text-primary" : "text-muted-foreground"
+        )} />
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => recentQueries.length > 0 && setShowHistory(true)}
-          onBlur={() => setTimeout(() => setShowHistory(false), 200)}
-          placeholder="Search across books... (press / to focus)"
-          className="pl-10 pr-20 h-12 text-base"
+          onFocus={() => {
+            setIsFocused(true);
+            if (recentQueries.length > 0) setShowHistory(true);
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+            setTimeout(() => setShowHistory(false), 200);
+          }}
+          placeholder="Search across books..."
+          className={cn(
+            "pl-11 pr-32 h-12 text-base rounded-xl border-border/50 bg-card/50",
+            "placeholder:text-muted-foreground/50",
+            "focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
+            "transition-all duration-300"
+          )}
           disabled={isLoading}
         />
-        <div className="absolute right-2 flex items-center gap-1">
+        <div className="absolute right-2 flex items-center gap-2">
+          {!value && !isLoading && (
+            <div className="hidden sm:flex items-center gap-1 text-muted-foreground/50 text-xs mr-2">
+              <kbd className="px-1.5 py-0.5 rounded bg-muted/50 border border-border/50 font-mono text-[10px]">/</kbd>
+            </div>
+          )}
           {value && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
               onClick={() => onChange('')}
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </Button>
           )}
           <Button
             onClick={onSubmit}
             disabled={!value || isLoading}
             size="sm"
-            className="h-8"
+            className={cn(
+              "h-8 px-4 rounded-lg font-medium",
+              "bg-primary text-primary-foreground",
+              "hover:bg-primary/90 transition-all"
+            )}
           >
-            {isLoading ? 'Searching...' : 'Search'}
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <span className="h-3 w-3 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                Searching
+              </span>
+            ) : 'Search'}
           </Button>
         </div>
       </div>
 
       {/* Recent queries dropdown */}
       {showHistory && recentQueries.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50">
+        <div className="absolute top-full left-0 right-0 mt-2 glass rounded-xl shadow-2xl shadow-black/20 z-50 overflow-hidden">
           <div className="p-2">
-            <p className="text-xs text-muted-foreground mb-2 px-2">Recent searches</p>
+            <p className="text-[10px] text-muted-foreground mb-2 px-2 uppercase tracking-wider">Recent</p>
             {recentQueries.slice(0, 5).map((query, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSelectRecent(query)}
                 className={cn(
-                  "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded",
-                  "hover:bg-accent hover:text-accent-foreground text-left"
+                  "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg",
+                  "hover:bg-primary/10 hover:text-primary text-left transition-colors"
                 )}
               >
-                <Clock className="h-3 w-3 text-muted-foreground" />
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="truncate">{query}</span>
               </button>
             ))}
