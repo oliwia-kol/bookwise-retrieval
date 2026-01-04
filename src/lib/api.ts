@@ -1,8 +1,9 @@
 import type { SearchFilters, SearchResponse, HealthResponse, EvidenceHit, Publisher } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || '';
+const USE_MOCK = !import.meta.env.VITE_API_URL;
 
-// Mock data for development
+// Mock data for development/demo
 const MOCK_HITS: EvidenceHit[] = [
   {
     id: '1',
@@ -97,12 +98,21 @@ const MOCK_NEAR_MISS: EvidenceHit[] = [
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function searchAPI(query: string, filters: SearchFilters): Promise<SearchResponse> {
-  // TODO: Replace with real API call when backend is ready
-  // return fetch(`${API_BASE}/search`, {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ query, ...filters }),
-  // }).then(res => res.json());
+  // Use real API if configured
+  if (!USE_MOCK) {
+    try {
+      const res = await fetch(`${API_BASE}/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, ...filters }),
+      });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json();
+    } catch (err) {
+      console.error('API request failed, falling back to mock:', err);
+      // Fall through to mock data
+    }
+  }
 
   await delay(600); // Simulate network latency
 
@@ -158,8 +168,16 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
 }
 
 export async function fetchHealth(): Promise<HealthResponse> {
-  // TODO: Replace with real API call
-  // return fetch(`${API_BASE}/health`).then(res => res.json());
+  // Use real API if configured
+  if (!USE_MOCK) {
+    try {
+      const res = await fetch(`${API_BASE}/health`);
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json();
+    } catch (err) {
+      console.error('Health check failed, falling back to mock:', err);
+    }
+  }
 
   await delay(200);
 
