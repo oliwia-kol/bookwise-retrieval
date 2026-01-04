@@ -1,73 +1,87 @@
-# Welcome to your Lovable project
+# RAG Books Search (CPU-only)
 
-## Project info
+Streamlit UI for retrieval-augmented search across indexed technical books. The pipeline is CPU-only (FAISS + sqlite + CrossEncoder judge), so no GPU/CUDA is required or supported.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Quick start (fastest path)
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+git clone <REPO_URL>
+cd rag-books-search
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
-**Edit a file directly in GitHub**
+Then open http://localhost:8501.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Chat mode (app.py)
 
-**Use GitHub Codespaces**
+The custom UI includes a chat panel above the main answer/evidence area. It
+uses the same RAG retrieval engine and a stubbed answer composer, so it runs on
+CPU-only (no GPU/CUDA required).
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+How to use:
 
-## What technologies are used for this project?
+1. Start the custom app: `streamlit run app.py`
+2. Type a question in the chat input and press Enter.
+3. The assistant replies with an answer or a short summary of sources.
 
-This project is built with:
+The chat history is stored in `st.session_state`, so it persists across
+Streamlit reruns during the session.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Requirements
 
-## How can I deploy this project?
+- Python 3.10+ (same as the rest of the app)
+- Streamlit (installed via `requirements.txt`)
+- CPU-only environment (FAISS + sqlite + CrossEncoder judge)
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### Local install & run (custom UI)
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-Yes, you can!
+## Data layout (required corpora)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Place CPU-friendly indexes under `.data/` (preferred for keeping artifacts out of sight) or `data/` using the same structure for each publisher. You can also override the location with `RAG_DATA_ROOT`.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```
+.data/
+├── OReilly/
+│   ├── index.faiss
+│   ├── meta.sqlite
+│   └── manifest.json
+├── Manning/
+│   ├── index.faiss
+│   ├── meta.sqlite
+│   └── manifest.json
+└── Pearson/
+    ├── index.faiss
+    ├── meta.sqlite
+    └── manifest.json
+```
+
+Only the index artifacts are needed; source PDFs/EPUBs are not required.
+
+## Checks and tests
+
+- Quick environment sanity check (Python, deps, corpus files): `python scripts/check_env.py`
+- Contract smoke for UI + engine modules: `python smoke_ui_contract.py`
+- Compile entrypoints: `python -m py_compile app.py rag_engine.py ui_adapter.py ui_shell.py ui_theme.py smoke_ui_contract.py`
+- Full test suite: `pytest`
+
+## Keep CPU usage in check
+
+If your local CPU is pegged when running the app, cap the BLAS thread count before launching Streamlit:
+
+```bash
+export OMP_NUM_THREADS=2
+export MKL_NUM_THREADS=2
+streamlit run app.py
+```
