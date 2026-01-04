@@ -13,16 +13,16 @@ interface EvidenceCardProps {
 }
 
 const TIER_CONFIG: Record<JudgeTier, { bg: string; text: string; glow: string }> = {
-  Strong: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
-  Solid: { bg: 'bg-primary/10', text: 'text-primary', glow: 'shadow-primary/20' },
-  Weak: { bg: 'bg-amber-500/10', text: 'text-amber-400', glow: 'shadow-amber-500/20' },
-  Poor: { bg: 'bg-destructive/10', text: 'text-destructive', glow: 'shadow-destructive/20' },
+  Strong: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', glow: 'shadow-emerald-500/30' },
+  Solid: { bg: 'bg-primary/15', text: 'text-primary', glow: 'shadow-primary/30' },
+  Weak: { bg: 'bg-amber-500/15', text: 'text-amber-400', glow: 'shadow-amber-500/30' },
+  Poor: { bg: 'bg-destructive/15', text: 'text-destructive', glow: 'shadow-destructive/30' },
 };
 
 const PUBLISHER_CONFIG: Record<string, { bg: string; text: string; accent: string }> = {
   OReilly: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', accent: 'border-emerald-500/30' },
   Manning: { bg: 'bg-rose-500/10', text: 'text-rose-400', accent: 'border-rose-500/30' },
-  Pearson: { bg: 'bg-blue-500/10', text: 'text-blue-400', accent: 'border-blue-500/30' },
+  Pearson: { bg: 'bg-sky-500/10', text: 'text-sky-400', accent: 'border-sky-500/30' },
 };
 
 export function EvidenceCard({ 
@@ -49,12 +49,20 @@ export function EvidenceCard({
     <div 
       className={cn(
         "group relative rounded-xl p-4 cursor-pointer transition-all duration-300",
-        "glass-subtle hover:bg-card/60",
-        "border hover:border-primary/30",
-        isSelected && "border-primary/50 bg-card/80 border-glow"
+        "card-premium",
+        isSelected && "border-primary/50 glow-gold-subtle"
       )}
       onClick={onSelect}
     >
+      {/* Gradient border on hover */}
+      <div className={cn(
+        "absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
+        "border border-transparent",
+        "before:absolute before:inset-0 before:rounded-xl before:p-[1px]",
+        "before:bg-gradient-to-r before:from-primary/50 before:via-purple-500/30 before:to-cyan-500/50",
+        "before:-z-10 before:opacity-0 group-hover:before:opacity-100 before:transition-opacity"
+      )} />
+
       {/* Top row: Publisher + Title + Actions */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -70,12 +78,12 @@ export function EvidenceCard({
           <span className="text-sm font-medium truncate">{hit.title}</span>
         </div>
         
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
           <Button
             variant="ghost"
             size="icon"
             className={cn(
-              "h-7 w-7 hover:bg-primary/10 hover:text-primary",
+              "h-7 w-7 hover:bg-primary/10 hover:text-primary transition-all",
               isPinned && "text-primary bg-primary/10"
             )}
             onClick={handlePin}
@@ -85,7 +93,7 @@ export function EvidenceCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 hover:bg-primary/10 hover:text-primary"
+            className="h-7 w-7 hover:bg-primary/10 hover:text-primary transition-all"
             onClick={handleCopy}
           >
             <Copy className="h-3.5 w-3.5" />
@@ -115,7 +123,7 @@ export function EvidenceCard({
           </Badge>
           <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
             <span className="flex items-center gap-1">
-              <span className="h-1 w-1 rounded-full bg-primary/50" />
+              <span className="h-1 w-1 rounded-full bg-primary" />
               S: {hit.s_score.toFixed(2)}
             </span>
             <span className="flex items-center gap-1">
@@ -128,7 +136,7 @@ export function EvidenceCard({
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-7 text-[10px] text-muted-foreground hover:text-primary gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="h-7 text-[10px] text-muted-foreground hover:text-primary gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300"
         >
           Open
           <ArrowUpRight className="h-3 w-3" />
