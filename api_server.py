@@ -28,6 +28,26 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+async def root():
+    """API root - shows available endpoints."""
+    return {
+        "name": "RAG Books API",
+        "version": "1.0.0",
+        "status": "running",
+        "engine_available": ENGINE_AVAILABLE,
+        "endpoints": {
+            "GET /": "This info",
+            "GET /health": "Health check with corpus status",
+            "POST /search": "Search the corpus",
+            "POST /chat": "Chat with the corpus",
+            "GET /suggestions": "Get query suggestions",
+            "GET /docs": "OpenAPI documentation (Swagger UI)",
+            "GET /redoc": "ReDoc documentation",
+        }
+    }
+
+
 class SearchRequest(BaseModel):
     query: str
     pubs: list[str] = []
