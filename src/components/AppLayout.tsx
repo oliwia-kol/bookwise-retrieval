@@ -86,7 +86,7 @@ export function AppLayout() {
         {/* Sidebar */}
         <aside 
           className={cn(
-            "border-r border-border/50 bg-sidebar transition-all duration-300 overflow-y-auto shrink-0",
+            "border-r border-border/20 bg-background transition-all duration-300 overflow-y-auto shrink-0",
             sidebarOpen ? "w-64" : "w-0"
           )}
         >
@@ -101,7 +101,7 @@ export function AppLayout() {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col overflow-hidden bg-background">
-          <div className="p-4 sm:p-6 space-y-4 border-b border-border/50">
+          <div className="p-4 sm:p-6 space-y-4 border-b border-border/20">
             <SearchBar
               value={query}
               onChange={setQuery}
@@ -136,7 +136,7 @@ export function AppLayout() {
         {/* Context Panel */}
         <aside 
           className={cn(
-            "border-l border-border/50 bg-card/50 transition-all duration-300 overflow-hidden shrink-0",
+            "border-l border-border/20 bg-card/30 transition-all duration-300 overflow-hidden shrink-0",
             contextOpen && (selectedHit || pinnedHits.length > 0) ? "w-80" : "w-0"
           )}
         >

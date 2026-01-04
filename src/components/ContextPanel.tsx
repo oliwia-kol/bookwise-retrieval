@@ -15,10 +15,10 @@ interface ContextPanelProps {
 }
 
 const TIER_CONFIG: Record<string, { bg: string; text: string }> = {
-  Strong: { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
-  Solid: { bg: 'bg-primary/10', text: 'text-primary' },
-  Weak: { bg: 'bg-amber-500/10', text: 'text-amber-400' },
-  Poor: { bg: 'bg-destructive/10', text: 'text-destructive' },
+  Strong: { bg: 'bg-emerald-500/15', text: 'text-emerald-400' },
+  Solid: { bg: 'bg-primary/15', text: 'text-primary' },
+  Weak: { bg: 'bg-amber-500/15', text: 'text-amber-400' },
+  Poor: { bg: 'bg-destructive/15', text: 'text-destructive' },
 };
 
 export function ContextPanel({ hit, onClose, pinnedHits = [], onUnpin }: ContextPanelProps) {
@@ -45,11 +45,11 @@ export function ContextPanel({ hit, onClose, pinnedHits = [], onUnpin }: Context
   if (!hit && pinnedHits.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-6">
-        <div className="h-16 w-16 rounded-2xl bg-muted/30 flex items-center justify-center mb-4">
-          <BookOpen className="h-8 w-8 opacity-50" />
+        <div className="h-16 w-16 rounded-2xl bg-secondary/50 border border-border/20 flex items-center justify-center mb-4">
+          <BookOpen className="h-8 w-8 opacity-40" />
         </div>
         <p className="text-center text-sm">Select an evidence card</p>
-        <p className="text-center text-xs text-muted-foreground/60 mt-1">View full context and citations</p>
+        <p className="text-center text-xs text-muted-foreground/50 mt-1">View full context and citations</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ export function ContextPanel({ hit, onClose, pinnedHits = [], onUnpin }: Context
       {hit && (
         <>
           {/* Header */}
-          <div className="p-4 border-b border-border/50 flex items-start justify-between gap-3">
+          <div className="p-4 border-b border-border/20 flex items-start justify-between gap-3 bg-card/30">
             <div className="min-w-0 flex-1">
               <h3 className="font-medium text-sm truncate">{hit.title}</h3>
               <p className="text-xs text-muted-foreground truncate mt-0.5">{hit.section}</p>
@@ -68,17 +68,17 @@ export function ContextPanel({ hit, onClose, pinnedHits = [], onUnpin }: Context
               variant="ghost" 
               size="icon" 
               onClick={onClose}
-              className="h-7 w-7 shrink-0 hover:bg-destructive/10 hover:text-destructive"
+              className="h-7 w-7 shrink-0 hover:bg-destructive/10 hover:text-destructive transition-all"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Meta badges */}
-          <div className="px-4 py-3 border-b border-border/50 flex items-center gap-2 flex-wrap">
+          <div className="px-4 py-3 border-b border-border/20 flex items-center gap-2 flex-wrap">
             <Badge 
               variant="outline" 
-              className="text-[10px] border-border/50 bg-card/50"
+              className="text-[10px] border-border/30 bg-secondary/50"
             >
               {hit.publisher}
             </Badge>
@@ -101,28 +101,28 @@ export function ContextPanel({ hit, onClose, pinnedHits = [], onUnpin }: Context
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Full Text</h4>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em]">Full Text</h4>
                 </div>
                 <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
                   {hit.full_text}
                 </p>
               </div>
 
-              <Separator className="bg-border/50" />
+              <Separator className="bg-border/20" />
 
               {/* Scores Grid */}
               <div>
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Scores</h4>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-3">Scores</h4>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-center">
-                    <p className="text-lg font-semibold text-primary font-mono">{hit.j_score.toFixed(2)}</p>
+                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center hover-gold transition-all">
+                    <p className="text-lg font-semibold text-primary font-mono text-glow-gold">{hit.j_score.toFixed(2)}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">J-Score</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-muted/30 border border-border/30 text-center">
+                  <div className="p-3 rounded-lg bg-secondary/50 border border-border/20 text-center">
                     <p className="text-lg font-semibold font-mono">{hit.s_score.toFixed(2)}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">S-Score</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-muted/30 border border-border/30 text-center">
+                  <div className="p-3 rounded-lg bg-secondary/50 border border-border/20 text-center">
                     <p className="text-lg font-semibold font-mono">{hit.l_score.toFixed(2)}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">L-Score</p>
                   </div>
@@ -132,11 +132,11 @@ export function ContextPanel({ hit, onClose, pinnedHits = [], onUnpin }: Context
           </ScrollArea>
 
           {/* Copy Actions */}
-          <div className="p-3 border-t border-border/50 flex gap-2">
+          <div className="p-3 border-t border-border/20 flex gap-2">
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 text-xs h-8 border-border/50 hover:border-primary/50 hover:bg-primary/5" 
+              className="flex-1 text-xs h-8 border-border/30 hover:border-primary/50 hover:bg-primary/5 transition-all" 
               onClick={handleCopyMd}
             >
               {copiedMd ? <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
@@ -145,7 +145,7 @@ export function ContextPanel({ hit, onClose, pinnedHits = [], onUnpin }: Context
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 text-xs h-8 border-border/50 hover:border-primary/50 hover:bg-primary/5" 
+              className="flex-1 text-xs h-8 border-border/30 hover:border-primary/50 hover:bg-primary/5 transition-all" 
               onClick={handleCopyJson}
             >
               {copiedJson ? <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
@@ -157,9 +157,9 @@ export function ContextPanel({ hit, onClose, pinnedHits = [], onUnpin }: Context
 
       {/* Pinned Items */}
       {pinnedHits.length > 0 && (
-        <div className={cn("border-t border-border/50", hit && "mt-auto")}>
+        <div className={cn("border-t border-border/20", hit && "mt-auto")}>
           <div className="p-4">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-3 flex items-center gap-2">
               <Pin className="h-3.5 w-3.5 text-primary" />
               Pinned · {pinnedHits.length}
             </h4>
@@ -167,13 +167,13 @@ export function ContextPanel({ hit, onClose, pinnedHits = [], onUnpin }: Context
               {pinnedHits.map((pinned) => (
                 <div
                   key={pinned.id}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-primary/5 border border-primary/10 text-sm group"
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-primary/5 border border-primary/20 text-sm group hover-gold transition-all"
                 >
                   <span className="truncate text-xs">{pinned.title}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                    className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => onUnpin?.(pinned.id)}
                   >
                     <X className="h-3 w-3" />

@@ -30,7 +30,7 @@ interface FilterSidebarProps {
 const PUBLISHERS: { id: Publisher; label: string; color: string }[] = [
   { id: 'OReilly', label: "O'Reilly", color: 'bg-emerald-500' },
   { id: 'Manning', label: 'Manning', color: 'bg-rose-500' },
-  { id: 'Pearson', label: 'Pearson', color: 'bg-blue-500' },
+  { id: 'Pearson', label: 'Pearson', color: 'bg-sky-500' },
 ];
 
 export function FilterSidebar({ 
@@ -58,7 +58,9 @@ export function FilterSidebar({
   if (collapsed) {
     return (
       <div className="flex flex-col items-center py-4 gap-4">
-        <Sliders className="h-5 w-5 text-muted-foreground" />
+        <div className="p-2 rounded-lg bg-primary/10">
+          <Sliders className="h-5 w-5 text-primary" />
+        </div>
       </div>
     );
   }
@@ -66,15 +68,17 @@ export function FilterSidebar({
   return (
     <div className="p-5 space-y-6">
       {/* Section Header */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-widest">
-        <Sliders className="h-3.5 w-3.5" />
+      <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-[0.2em]">
+        <div className="p-1.5 rounded-md bg-primary/10">
+          <Sliders className="h-3 w-3 text-primary" />
+        </div>
         Filters
       </div>
 
       {/* Publishers */}
       <div className="space-y-3">
         <h3 className="text-xs font-medium text-foreground/80">Publishers</h3>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {PUBLISHERS.map((pub) => {
             const isAvailable = availablePublishers.includes(pub.id);
             const isSelected = filters.pubs.includes(pub.id);
@@ -83,9 +87,9 @@ export function FilterSidebar({
               <label
                 key={pub.id}
                 className={cn(
-                  "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all",
-                  "hover:bg-primary/5",
-                  isSelected && "bg-primary/10",
+                  "flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all duration-300",
+                  "hover:bg-secondary hover-gold",
+                  isSelected && "bg-primary/10 border border-primary/20",
                   !isAvailable && "opacity-40 cursor-not-allowed"
                 )}
               >
@@ -112,10 +116,10 @@ export function FilterSidebar({
             size="sm"
             onClick={() => updateFilter('mode', 'quick')}
             className={cn(
-              "w-full text-xs font-medium transition-all",
+              "w-full text-xs font-medium transition-all duration-300",
               filters.mode === 'quick' 
-                ? "bg-primary text-primary-foreground" 
-                : "border-border/50 hover:border-primary/50 hover:bg-primary/5"
+                ? "gradient-gold text-background glow-gold-subtle" 
+                : "border-border/30 hover:border-primary/50 hover:bg-primary/5"
             )}
           >
             Quick
@@ -125,10 +129,10 @@ export function FilterSidebar({
             size="sm"
             onClick={() => updateFilter('mode', 'exact')}
             className={cn(
-              "w-full text-xs font-medium transition-all",
+              "w-full text-xs font-medium transition-all duration-300",
               filters.mode === 'exact' 
-                ? "bg-primary text-primary-foreground" 
-                : "border-border/50 hover:border-primary/50 hover:bg-primary/5"
+                ? "gradient-gold text-background glow-gold-subtle" 
+                : "border-border/30 hover:border-primary/50 hover:bg-primary/5"
             )}
           >
             Exact
@@ -148,10 +152,10 @@ export function FilterSidebar({
           value={filters.sort} 
           onValueChange={(v) => updateFilter('sort', v as SortOption)}
         >
-          <SelectTrigger className="h-9 text-xs border-border/50 bg-card/50">
+          <SelectTrigger className="h-9 text-xs border-border/30 bg-card/80 hover:border-primary/50 transition-all">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="glass">
+          <SelectContent className="bg-card border-border/30">
             <SelectItem value="Best evidence" className="text-xs">Best Evidence (J-Score)</SelectItem>
             <SelectItem value="Semantic" className="text-xs">Semantic (S-Score)</SelectItem>
           </SelectContent>
@@ -164,7 +168,7 @@ export function FilterSidebar({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="w-full justify-between text-xs text-muted-foreground hover:text-foreground hover:bg-primary/5 h-8"
+            className="w-full justify-between text-xs text-muted-foreground hover:text-foreground hover:bg-secondary h-8"
           >
             Advanced
             {advancedOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -175,7 +179,7 @@ export function FilterSidebar({
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <Label className="text-xs text-foreground/80">Min J-Score</Label>
-              <span className="text-xs text-primary font-mono">{filters.jmin.toFixed(2)}</span>
+              <span className="text-xs text-primary font-mono text-glow-gold">{filters.jmin.toFixed(2)}</span>
             </div>
             <Slider
               value={[filters.jmin]}
@@ -194,10 +198,10 @@ export function FilterSidebar({
               value={filters.judge_mode} 
               onValueChange={(v) => updateFilter('judge_mode', v as 'real' | 'proxy' | 'off')}
             >
-              <SelectTrigger className="h-9 text-xs border-border/50 bg-card/50">
+              <SelectTrigger className="h-9 text-xs border-border/30 bg-card/80">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="glass">
+              <SelectContent className="bg-card border-border/30">
                 <SelectItem value="real" className="text-xs">Real (LLM Judge)</SelectItem>
                 <SelectItem value="proxy" className="text-xs">Proxy (Fast)</SelectItem>
                 <SelectItem value="off" className="text-xs">Off</SelectItem>
@@ -206,7 +210,7 @@ export function FilterSidebar({
           </div>
 
           {/* Near-Miss Toggle */}
-          <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border/20">
             <Label className="text-xs text-foreground/80">Show Near-Miss</Label>
             <Switch
               checked={filters.show_near_miss}
