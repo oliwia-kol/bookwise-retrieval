@@ -2,7 +2,51 @@
 
 Streamlit UI for retrieval-augmented search across indexed technical books. The pipeline is CPU-only (FAISS + sqlite + CrossEncoder judge), so no GPU/CUDA is required or supported.
 
-## Quick start (fastest path)
+## React Frontend + FastAPI Backend
+
+For the React UI with FastAPI backend:
+
+### Backend Setup (venv)
+
+```bash
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# or: .venv\Scripts\activate  # Windows
+
+# Install dependencies
+pip install -U pip
+pip install -r requirements.txt
+
+# Run FastAPI server
+uvicorn api_server:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Frontend Setup
+
+```bash
+# Install Node dependencies
+npm install
+
+# Create .env with your backend URL
+cp .env.example .env
+# Edit .env and set VITE_API_URL to your backend URL
+
+# Run React dev server
+npm run dev
+```
+
+### Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VITE_API_URL` | FastAPI backend URL | `http://localhost:8000` or Codespaces URL |
+| `OMP_NUM_THREADS` | Limit CPU threads | `2` |
+| `MKL_NUM_THREADS` | Limit BLAS threads | `2` |
+
+---
+
+## Streamlit UI (Quick start)
 
 ```bash
 git clone <REPO_URL>
