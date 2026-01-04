@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -199,6 +200,7 @@ HCFG = {
     },
     "jdg_cache_ttl": 600,
     "jdg_cache_size": 256,
+    "embed_cache_size": 512,
     "modes": {
         "quick": {
             "label": "Quick",
@@ -257,6 +259,8 @@ META_N_KEYS = [
     "uniq_sections",
     "fallback_retries",
     "fallback_failed",
+    "embed_cache_hits",
+    "embed_cache_misses",
 ]
 META_CAP_KEYS = ["has_emb", "dense_ok", "lex_ok", "judge_requested", "judge_ok", "judge_kind"]
 META_FLAG_KEYS = [
@@ -329,13 +333,60 @@ def mode_options() -> List[Dict[str, Any]]:
 # FTS helpers
 # -----------------------------
 def fts_query_escape(q: str) -> str:
-    # identical intent to 02: tokenise, keep alnum, join with OR
-    xs = re.findall(r"[A-Za-z0-9]+", (q or "").strip())
-    xs = [x for x in xs if len(x) >= 2]
-    if not xs:
+    q = (q or "").strip()
+    if not q:
         return ""
-    # basic FTS5 safe query: token1 OR token2 OR ...
-    return " OR ".join(xs)
+
+    phrases = []
+    remainder = []
+    phrase_re = re.compile(r'"([^"]+)"|\'([^\']+)\'')
+    last = 0
+    for match in phrase_re.finditer(q):
+        if match.start() > last:
+            remainder.append(q[last:match.start()])
+        phrase = match.group(1) or match.group(2) or ""
+        if phrase:
+            phrases.append(phrase)
+        last = match.end()
+    if last < len(q):
+        remainder.append(q[last:])
+
+    def _fts_tokens(text: str) -> List[str]:
+        toks = re.findall(r"[A-Za-z0-9]+", text or "")
+        return [t for t in toks if len(t) >= 2]
+
+    tokens = _fts_tokens(" ".join(remainder))
+    safe_terms = []
+    seen = set()
+
+    for tok in tokens:
+        key = tok.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        safe_terms.append(tok)
+
+    for phrase in phrases:
+        phrase_tokens = _fts_tokens(phrase)
+        if not phrase_tokens:
+            continue
+        if len(phrase_tokens) == 1:
+            tok = phrase_tokens[0]
+            key = tok.lower()
+            if key not in seen:
+                seen.add(key)
+                safe_terms.append(tok)
+            continue
+        phrase_text = " ".join(phrase_tokens)
+        key = phrase_text.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        safe_terms.append(f"\"{phrase_text.replace('\"', '\"\"')}\"")
+
+    if not safe_terms:
+        return ""
+    return " OR ".join(safe_terms)
 
 
 def fts_ready(con: sqlite3.Connection) -> bool:
@@ -510,13 +561,153 @@ def _db(con_p: Path) -> sqlite3.Connection:
     return sqlite3.connect(str(con_p), check_same_thread=False)
 
 
-def embed_query(e: Eng, q: str) -> np.ndarray:
-    if e.emb is None:
-        return np.array([], dtype="float32")
+_EMB_CACHE: "OrderedDict[Tuple[str, str], np.ndarray]" = OrderedDict()
+_EMB_CACHE_MAX = int(HCFG.get("embed_cache_size", 512))
+
+
+def _embed_cache_key(e: Eng, q: str) -> Tuple[str, str]:
+    emb_name = getattr(e.emb, "name_or_path", None) or getattr(e.emb, "model_name", None) or str(id(e.emb))
+    return (str(emb_name), (q or "").strip())
+
+
+def _embed_cache_get(key: Tuple[str, str]) -> Optional[np.ndarray]:
     try:
-        return np.asarray(e.emb.encode(q, convert_to_numpy=True), dtype="float32")
+        val = _EMB_CACHE.get(key)
+        if val is None:
+            return None
+        _EMB_CACHE.move_to_end(key)
+        return val
     except Exception:
+        return None
+
+
+def _embed_cache_set(key: Tuple[str, str], val: np.ndarray) -> None:
+    try:
+        _EMB_CACHE[key] = val
+        _EMB_CACHE.move_to_end(key)
+        while len(_EMB_CACHE) > _EMB_CACHE_MAX:
+            _EMB_CACHE.popitem(last=False)
+    except Exception:
+        pass
+
+
+def _record_embed_cache(meta: Optional[Dict[str, Any]], hit: bool) -> None:
+    if not isinstance(meta, dict):
+        return
+    n_meta = meta.setdefault("n", {})
+    if hit:
+        n_meta["embed_cache_hits"] = int(n_meta.get("embed_cache_hits", 0)) + 1
+    else:
+        n_meta["embed_cache_misses"] = int(n_meta.get("embed_cache_misses", 0)) + 1
+
+
+_SYNONYM_MAP = {
+    "ai": ["artificial intelligence"],
+    "ml": ["machine learning"],
+    "nlp": ["natural language processing"],
+    "llm": ["large language model", "large language models"],
+    "rag": ["retrieval augmented generation", "retrieval-augmented generation"],
+}
+
+_REWRITE_PATTERNS: List[Tuple[re.Pattern, str]] = [
+    (re.compile(r"\bwhat\s+is\b", re.IGNORECASE), "definition of"),
+    (re.compile(r"\bdefine\b", re.IGNORECASE), "definition of"),
+    (re.compile(r"\bmeaning\s+of\b", re.IGNORECASE), "definition of"),
+    (re.compile(r"\bhow\s+to\b", re.IGNORECASE), "guide to"),
+    (re.compile(r"\bvs\.?\b", re.IGNORECASE), "versus"),
+]
+
+
+def _expand_query(q: str) -> Tuple[str, Dict[str, Any]]:
+    q_clean = (q or "").strip()
+    if not q_clean:
+        return "", {"expansions": [], "rewrites": [], "query_rewritten": ""}
+
+    rewrites = []
+    q_rewritten = q_clean
+    for pattern, repl in _REWRITE_PATTERNS:
+        if pattern.search(q_rewritten):
+            q_rewritten = pattern.sub(repl, q_rewritten)
+            rewrites.append({"pattern": pattern.pattern, "rewrite": repl})
+
+    tokens = [t.lower() for t in re.findall(r"[A-Za-z0-9]+", q_clean)]
+    expansions = []
+    seen = set(tokens)
+    for tok in tokens:
+        for syn in _SYNONYM_MAP.get(tok, []):
+            key = syn.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            expansions.append(syn)
+
+    q_expanded = q_rewritten
+    if expansions:
+        q_expanded = f"{q_rewritten} " + " ".join(expansions)
+
+    return q_expanded, {"expansions": expansions, "rewrites": rewrites, "query_rewritten": q_rewritten}
+
+
+def embed_query(e: Eng, q: str, meta: Optional[Dict[str, Any]] = None) -> np.ndarray:
+    if e.emb is None:
+        _record_embed_cache(meta, False)
         return np.array([], dtype="float32")
+    key = _embed_cache_key(e, q)
+    cached = _embed_cache_get(key)
+    if cached is not None:
+        _record_embed_cache(meta, True)
+        return cached.copy()
+    try:
+        vec = np.asarray(e.emb.encode(q, convert_to_numpy=True), dtype="float32")
+    except Exception:
+        _record_embed_cache(meta, False)
+        return np.array([], dtype="float32")
+    if vec.size:
+        _embed_cache_set(key, vec)
+    _record_embed_cache(meta, False)
+    return vec
+
+
+def embed_queries(e: Eng, qs: List[str], metas: Optional[List[Optional[Dict[str, Any]]]] = None) -> List[np.ndarray]:
+    if e.emb is None:
+        if metas:
+            for meta in metas:
+                _record_embed_cache(meta, False)
+        return [np.array([], dtype="float32") for _ in qs]
+
+    metas = metas or [None] * len(qs)
+    out: List[Optional[np.ndarray]] = [None] * len(qs)
+    missing_texts = []
+    missing_idx = []
+
+    for i, q in enumerate(qs):
+        key = _embed_cache_key(e, q)
+        cached = _embed_cache_get(key)
+        if cached is not None:
+            _record_embed_cache(metas[i], True)
+            out[i] = cached.copy()
+        else:
+            _record_embed_cache(metas[i], False)
+            missing_idx.append(i)
+            missing_texts.append(q)
+
+    if missing_texts:
+        try:
+            embeds = e.emb.encode(missing_texts, convert_to_numpy=True)
+        except Exception:
+            embeds = []
+        if isinstance(embeds, np.ndarray):
+            embeds = [embeds[i] for i in range(embeds.shape[0])]
+        for i, emb in enumerate(embeds):
+            idx = missing_idx[i]
+            vec = np.asarray(emb, dtype="float32")
+            out[idx] = vec
+            if vec.size:
+                _embed_cache_set(_embed_cache_key(e, qs[idx]), vec)
+        for idx in missing_idx[len(embeds):]:
+            out[idx] = np.array([], dtype="float32")
+
+    return [vec if isinstance(vec, np.ndarray) else np.array([], dtype="float32") for vec in out]
 
 
 def _normalize_query(qv: np.ndarray) -> np.ndarray:
@@ -629,12 +820,12 @@ def faiss_search(e: Eng, corp: str, qv: np.ndarray, k: int):
                     "fp": fp,
                     "sec": sec,
                     "cidx": int(cidx),
-                    "tx": _cap_tx(tx),
+                    "tx": tx,
                     # aliases
                     "section": sec,
                     "book": Path(fp).stem if fp else None,
                     "publisher": corp,
-                    "text": _cap_tx(tx),
+                    "text": tx,
                     "sem_score": float(s),
                 }
             )
@@ -1418,6 +1609,13 @@ def _log_event(meta, mode, pubs_requested, qlen, hits=None):
             "mode_cfg": meta.get("mode_cfg", {}),
             "scope": {"requested": list(pubs_requested or []), "used": scope_used},
             "qlen": int(qlen or 0),
+            "query": {
+                "original": base.get("query_original"),
+                "rewritten": base.get("query_rewritten"),
+                "expanded": base.get("query_expanded"),
+                "expansions": base.get("query_expansions", []),
+                "rewrites": base.get("query_rewrites", []),
+            },
             "counts": dict(meta.get("n", {})),
             "flags": dict(meta.get("flags", {})),
             "judge_ok": meta.get("cap", {}).get("judge_ok", False),
@@ -1528,9 +1726,14 @@ def run_query(
     ctx_tok_budget: Optional[int] = None,
     prompt_char_budget: Optional[int] = None,
     prompt_tok_budget: Optional[int] = None,
+    qv_override: Optional[np.ndarray] = None,
+    q_expanded_override: Optional[str] = None,
+    expansion_meta: Optional[Dict[str, Any]] = None,
+    embed_time_override: Optional[float] = None,
+    meta_override: Optional[Dict[str, Any]] = None,
 ):
     t_total = _t0()
-    meta = _blank_meta()
+    meta = meta_override if isinstance(meta_override, dict) else _blank_meta()
     mode_cfg = _mode_cfg(mode)
     mode_name = mode_cfg["name"]
     meta["mode"] = mode_cfg["name"]
@@ -1585,6 +1788,20 @@ def run_query(
             _log_event(meta, mode_name, pubs or list(getattr(e, "corp", {}).keys()), len(q_clean or q or ""))
             return _mk_ret(ok=False, no_ev=True, hits=[], nm_hits=[], cov="WEAK", ans="", meta=meta)
 
+        if q_expanded_override is not None:
+            q_expanded = q_expanded_override
+            expand_meta = expansion_meta or {"expansions": [], "rewrites": [], "query_rewritten": q_expanded_override}
+        else:
+            q_expanded, expand_meta = _expand_query(q_clean)
+        q_expanded = q_expanded or q_clean
+        q_embed = q_expanded
+        q_lex = q_expanded
+        meta["log"]["query_original"] = q_clean
+        meta["log"]["query_rewritten"] = expand_meta.get("query_rewritten", q_expanded)
+        meta["log"]["query_expanded"] = q_expanded
+        meta["log"]["query_expansions"] = list(expand_meta.get("expansions", []))
+        meta["log"]["query_rewrites"] = list(expand_meta.get("rewrites", []))
+
         qs = set([w.lower() for w in re.findall(r"[A-Za-z0-9]+", q) if len(w) >= 3])
         meta_jdg = {"ok": False, "kind": "none"}
 
@@ -1631,8 +1848,12 @@ def run_query(
 
         # embed
         t_emb = _t0()
-        qv = embed_query(e, q)
-        meta["t"]["embed"] = _dt(t_emb)
+        if qv_override is not None:
+            qv = qv_override
+            meta["t"]["embed"] = float(embed_time_override or 0.0)
+        else:
+            qv = embed_query(e, q_embed, meta=meta)
+            meta["t"]["embed"] = _dt(t_emb)
         expected_dim = None
         if getattr(e, "ix_dim", None):
             try:
@@ -1657,7 +1878,7 @@ def run_query(
         lex_k_mode = mode_cfg.get("lex_k", HCFG["lex_k"])
         hs, rmeta = hybrid_retrieve(
             e,
-            q,
+            q_lex,
             pubs=pubs,
             qv=qv,
             k=mmr_k_mode,
@@ -1875,6 +2096,78 @@ def run_query(
         meta["t"]["total"] = _dt(t_total)
         _log_event(meta, mode_name, pubs or list(getattr(e, "corp", {}).keys()), len(q))
         return _mk_ret(ok=False, no_ev=True, hits=[], nm_hits=[], cov="WEAK", ans="", meta=meta)
+
+
+def run_queries(
+    e: Eng,
+    queries: List[str],
+    pubs=None,
+    sort: str = "Best evidence",
+    nm: bool | None = None,
+    show_nm: bool | None = None,
+    compute_near_miss: bool | None = None,
+    jmin: float | None = None,
+    use_jdg: bool | None = None,
+    jdg_mode: str | None = None,
+    judge_mode: str | None = None,
+    scope=None,
+    use_llm: bool | None = None,
+    use_vector_mmr: bool | None = None,
+    mode: str | None = None,
+    ctx_char_budget: Optional[int] = None,
+    ctx_tok_budget: Optional[int] = None,
+    prompt_char_budget: Optional[int] = None,
+    prompt_tok_budget: Optional[int] = None,
+) -> List[Dict[str, Any]]:
+    if not queries:
+        return []
+
+    prepared = []
+    metas = []
+    for q in queries:
+        meta = _blank_meta()
+        q_clean = (q or "").strip()
+        q_expanded, expand_meta = _expand_query(q_clean)
+        q_embed = q_expanded or q_clean
+        prepared.append({"q_expanded": q_expanded or q_clean, "expand_meta": expand_meta, "q_embed": q_embed})
+        metas.append(meta)
+
+    t_emb = _t0()
+    qvs = embed_queries(e, [p["q_embed"] for p in prepared], metas=metas)
+    embed_time = _dt(t_emb)
+    per_query_emb = embed_time / max(1, len(queries))
+
+    results = []
+    for idx, q in enumerate(queries):
+        prep = prepared[idx]
+        result = run_query(
+            e,
+            q,
+            pubs=pubs,
+            sort=sort,
+            nm=nm,
+            show_nm=show_nm,
+            compute_near_miss=compute_near_miss,
+            jmin=jmin,
+            use_jdg=use_jdg,
+            jdg_mode=jdg_mode,
+            judge_mode=judge_mode,
+            scope=scope,
+            use_llm=use_llm,
+            use_vector_mmr=use_vector_mmr,
+            mode=mode,
+            ctx_char_budget=ctx_char_budget,
+            ctx_tok_budget=ctx_tok_budget,
+            prompt_char_budget=prompt_char_budget,
+            prompt_tok_budget=prompt_tok_budget,
+            qv_override=qvs[idx],
+            q_expanded_override=prep["q_expanded"],
+            expansion_meta=prep["expand_meta"],
+            embed_time_override=per_query_emb,
+            meta_override=metas[idx],
+        )
+        results.append(result)
+    return results
 
 
 # ---------------------------------------------------------------------------
