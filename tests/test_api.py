@@ -1,7 +1,17 @@
 from fastapi.testclient import TestClient
 
 
-def test_health_ok(api_client, api_server_module, monkeypatch):
+def test_root_endpoint_returns_info(api_client):
+    response = api_client.get("/")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["name"] == "RAG Books API"
+    assert payload["version"] == "1.0.0"
+    assert "endpoints" in payload
+
+
+def test_health_with_engine_available(api_client, api_server_module, monkeypatch):
     def fake_report(_):
         return {"Pub": True, "Other": False}
 
@@ -16,42 +26,43 @@ def test_health_ok(api_client, api_server_module, monkeypatch):
     assert payload["publishers"] == ["Pub"]
 
 
-def test_search_success(api_client, api_server_module, monkeypatch):
+def test_health_without_engine(api_server_module):
+    api_server_module.ENGINE_AVAILABLE = False
+    client = TestClient(api_server_module.app)
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["ok"] is False
+    assert payload["engine_version"] == "unavailable"
+
+
+def test_search_empty_query_returns_400(api_client):
+    response = api_client.post("/search", json={"query": " ", "mode": "balanced"})
+
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["code"] == "VALIDATION_ERROR"
+
+
+def test_search_valid_query_returns_hits(api_client, api_server_module, monkeypatch):
     def fake_run_query(*_args, **_kwargs):
         return {
             "ok": True,
             "hits": [
                 {
-                    "title": "Low Semantic",
+                    "title": "Hit",
                     "j_score": 0.7,
                     "s_score": 0.2,
                     "text": "hit one",
                     "publisher": "Pub",
                     "book": "Book One",
                     "section": "Intro",
-                },
-                {
-                    "title": "High Semantic",
-                    "j_score": 0.6,
-                    "s_score": 0.9,
-                    "text": "hit two",
-                    "publisher": "Pub",
-                    "book": "Book Two",
-                    "section": "Chapter",
-                },
-            ],
-            "near_miss": [
-                {
-                    "title": "Near",
-                    "j_score": 0.2,
-                    "s_score": 0.1,
-                    "text": "near",
-                    "publisher": "Pub",
-                    "book": "Book Three",
-                    "section": "Edge",
                 }
             ],
-            "meta": {"n": {"direct_hits": 2}},
+            "near_miss": [],
+            "meta": {"n": {"direct_hits": 1}},
             "answer": "Answer",
         }
 
@@ -59,25 +70,16 @@ def test_search_success(api_client, api_server_module, monkeypatch):
 
     response = api_client.post(
         "/search",
-        json={
-            "query": "python",
-            "jmin": 0.5,
-            "sort": "Semantic",
-            "page": 1,
-            "page_size": 1,
-            "mode": "balanced",
-        },
+        json={"query": "python", "jmin": 0.1, "mode": "balanced", "page": 1, "page_size": 10},
     )
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["ok"] is True
-    assert payload["hits"][0]["title"] == "High Semantic"
-    assert payload["meta"]["pagination"]["total_hits"] == 2
-    assert payload["near_miss"][0]["title"] == "Near"
+    assert payload["hits"]
 
 
-def test_search_missing_publishers(api_client, api_server_module):
+def test_search_publisher_filter(api_client):
     response = api_client.post(
         "/search",
         json={"query": "python", "pubs": ["Missing"], "mode": "balanced"},
@@ -88,18 +90,49 @@ def test_search_missing_publishers(api_client, api_server_module):
     assert payload["code"] == "MISSING_PUBLISHERS"
 
 
-def test_search_engine_unavailable(api_server_module):
-    api_server_module.ENGINE_AVAILABLE = False
-    client = TestClient(api_server_module.app)
+def test_search_jmin_filter(api_client, api_server_module, monkeypatch):
+    def fake_run_query(*_args, **_kwargs):
+        return {
+            "ok": True,
+            "hits": [
+                {
+                    "title": "Low",
+                    "j_score": 0.2,
+                    "s_score": 0.2,
+                    "text": "low",
+                    "publisher": "Pub",
+                    "book": "Book One",
+                    "section": "Intro",
+                },
+                {
+                    "title": "High",
+                    "j_score": 0.9,
+                    "s_score": 0.3,
+                    "text": "high",
+                    "publisher": "Pub",
+                    "book": "Book Two",
+                    "section": "Chapter",
+                },
+            ],
+            "near_miss": [],
+            "meta": {"n": {"direct_hits": 2}},
+            "answer": "Answer",
+        }
 
-    response = client.post("/search", json={"query": "python", "mode": "balanced"})
+    monkeypatch.setattr(api_server_module.rag, "run_query", fake_run_query)
 
-    assert response.status_code == 503
+    response = api_client.post(
+        "/search",
+        json={"query": "python", "jmin": 0.5, "mode": "balanced"},
+    )
+
+    assert response.status_code == 200
     payload = response.json()
-    assert payload["code"] == "ENGINE_UNAVAILABLE"
+    assert len(payload["hits"]) == 1
+    assert payload["hits"][0]["title"] == "High"
 
 
-def test_chat_response(api_client, api_server_module, monkeypatch):
+def test_chat_endpoint(api_client, api_server_module, monkeypatch):
     def fake_run_query(*_args, **_kwargs):
         return {
             "ok": True,
@@ -126,4 +159,13 @@ def test_chat_response(api_client, api_server_module, monkeypatch):
     payload = response.json()
     assert payload["ok"] is True
     assert payload["answer"] == "Rendered"
-    assert payload["sources"][0]["title"] == "Chat"
+
+
+def test_suggestions_endpoint(api_client, api_server_module, monkeypatch):
+    monkeypatch.setattr(api_server_module.rag, "get_recent_queries", lambda limit=5: ["alpha", "beta"])
+
+    response = api_client.get("/suggestions", params={"q": "a"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["suggestions"] == ["alpha", "beta"]

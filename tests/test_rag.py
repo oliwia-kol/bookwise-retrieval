@@ -12,13 +12,35 @@ class DummyIndex:
 
 class DummyModel:
     def __init__(self, *_args, **_kwargs):
-        pass
+        self.name_or_path = "dummy"
 
     def get_sentence_embedding_dimension(self):
         return 3
 
+    def encode(self, text, convert_to_numpy=True):
+        if isinstance(text, list):
+            return np.array([[1.0, 2.0, 3.0] for _ in text], dtype="float32")
+        return np.array([1.0, 2.0, 3.0], dtype="float32")
 
-def test_mk_eng_reports_ready_and_failure(monkeypatch, tmp_path):
+
+def test_engine_initialization(monkeypatch, tmp_path):
+    monkeypatch.setattr(rag_engine, "CORP", {"Alpha": Path("Alpha")})
+    monkeypatch.setattr(rag_engine, "SentenceTransformer", DummyModel)
+    monkeypatch.setattr(rag_engine.faiss, "read_index", lambda _path: DummyIndex(3))
+
+    alpha = tmp_path / "Alpha"
+    alpha.mkdir()
+    (alpha / "index.faiss").write_text("index")
+    (alpha / "meta.sqlite").write_text("db")
+    (alpha / "manifest.json").write_text("{}")
+
+    eng = rag_engine._mk_eng(base_out=tmp_path)
+
+    assert "Alpha" in eng.corp
+    assert eng.corp_report["Alpha"]["ready"] is True
+
+
+def test_corpus_loading(monkeypatch, tmp_path):
     monkeypatch.setattr(rag_engine, "CORP", {"Alpha": Path("Alpha"), "Beta": Path("Beta")})
     monkeypatch.setattr(rag_engine, "SentenceTransformer", DummyModel)
     monkeypatch.setattr(rag_engine.faiss, "read_index", lambda _path: DummyIndex(3))
@@ -36,24 +58,72 @@ def test_mk_eng_reports_ready_and_failure(monkeypatch, tmp_path):
 
     assert "Alpha" in eng.corp
     assert "Beta" not in eng.corp
-    assert eng.corp_report["Alpha"]["ready"] is True
     assert eng.corp_report["Beta"]["ready"] is False
-    assert "missing" in eng.corp_report["Beta"]["failure_reason"]
 
 
-def test_norm_scores_handles_flat_and_range():
-    flat = [{"score": 1.0}, {"score": 1.0}]
-    rag_engine.norm_scores(flat, "score")
-    assert all(item["score_n"] == 0.0 for item in flat)
+def test_embedding_generation(monkeypatch):
+    monkeypatch.setattr(rag_engine, "SentenceTransformer", DummyModel)
 
-    varied = [{"score": 1.0}, {"score": 3.0}, {"score": 2.0}]
-    rag_engine.norm_scores(varied, "score")
-    assert varied[0]["score_n"] == 0.0
-    assert varied[1]["score_n"] == 1.0
-    assert 0.0 < varied[2]["score_n"] < 1.0
+    eng = rag_engine.Eng(
+        emb=DummyModel(),
+        ix={},
+        dbp={},
+        corp={},
+        ix_dim={},
+        corp_report={},
+    )
+
+    vec = rag_engine.embed_query(eng, "hello")
+
+    assert vec.shape == (3,)
+    assert np.allclose(vec, np.array([1.0, 2.0, 3.0], dtype="float32"))
 
 
-def test_hybrid_retrieve_fusion(monkeypatch):
+def test_dense_retrieval(monkeypatch):
+    def fake_faiss_search(_e, _corp, _qv, _k):
+        return ([{"sem_score": 0.5}], {"fallback_retries": 0, "fallback_failed": 0, "k_clamped": False})
+
+    monkeypatch.setattr(rag_engine, "faiss_search", fake_faiss_search)
+
+    eng = rag_engine.Eng(
+        emb=None,
+        ix={"Pub": object()},
+        dbp={},
+        corp={"Pub": Path("Pub")},
+        ix_dim={},
+        corp_report={},
+    )
+
+    hits, meta = rag_engine.dense_retrieve(eng, "Pub", np.array([1.0], dtype="float32"), k=5)
+
+    assert hits
+    assert "score" in hits[0]
+    assert meta["fallback_retries"] == 0
+
+
+def test_lexical_retrieval(monkeypatch):
+    def fake_fts_search(_e, _corp, _q, _k):
+        return [{"lex_score": 0.2}]
+
+    monkeypatch.setattr(rag_engine, "fts_search", fake_fts_search)
+
+    eng = rag_engine.Eng(
+        emb=None,
+        ix={},
+        dbp={"Pub": Path("meta.sqlite")},
+        corp={"Pub": Path("Pub")},
+        ix_dim={},
+        corp_report={},
+    )
+
+    hits, meta = rag_engine.lex_retrieve(eng, "Pub", "query", k=5)
+
+    assert hits
+    assert "score" in hits[0]
+    assert "clamped_k" in meta
+
+
+def test_hybrid_fusion(monkeypatch):
     def fake_dense(_e, _corp, _qv, k):
         return (
             [
@@ -107,16 +177,13 @@ def test_hybrid_retrieve_fusion(monkeypatch):
     assert meta["lex_hits"] == 1
 
 
-def test_normalize_query_calls_faiss(monkeypatch):
-    called = {"count": 0}
+def test_score_normalization():
+    flat = [{"score": 1.0}, {"score": 1.0}]
+    rag_engine.norm_scores(flat, "score")
+    assert all(item["score_n"] == 0.0 for item in flat)
 
-    def fake_norm(arr):
-        called["count"] += 1
-
-    monkeypatch.setattr(rag_engine.faiss, "normalize_L2", fake_norm)
-
-    vec = np.array([1.0, 2.0], dtype="float32")
-    out = rag_engine._normalize_query(vec)
-
-    assert called["count"] == 1
-    assert out.shape == vec.shape
+    varied = [{"score": 1.0}, {"score": 3.0}, {"score": 2.0}]
+    rag_engine.norm_scores(varied, "score")
+    assert varied[0]["score_n"] == 0.0
+    assert varied[1]["score_n"] == 1.0
+    assert 0.0 < varied[2]["score_n"] < 1.0

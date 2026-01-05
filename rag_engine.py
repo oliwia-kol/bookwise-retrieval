@@ -609,6 +609,8 @@ _SYNONYM_MAP = {
     "llm": ["large language model", "large language models"],
     "rag": ["retrieval augmented generation", "retrieval-augmented generation"],
 }
+_SYNONYM_VOCAB = sorted({term for terms in _SYNONYM_MAP.values() for term in terms} | set(_SYNONYM_MAP.keys()))
+_SYNONYM_VEC_CACHE: Dict[str, Dict[str, np.ndarray]] = {}
 
 _REWRITE_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (re.compile(r"\bwhat\s+is\b", re.IGNORECASE), "definition of"),
@@ -619,7 +621,60 @@ _REWRITE_PATTERNS: List[Tuple[re.Pattern, str]] = [
 ]
 
 
-def _expand_query(q: str) -> Tuple[str, Dict[str, Any]]:
+def _get_synonym_vectors(e: Optional[Eng]) -> Optional[Dict[str, np.ndarray]]:
+    if e is None or e.emb is None:
+        return None
+    emb_name = getattr(e.emb, "name_or_path", None) or getattr(e.emb, "model_name", None) or str(id(e.emb))
+    cached = _SYNONYM_VEC_CACHE.get(str(emb_name))
+    if cached is not None:
+        return cached
+    try:
+        vecs = e.emb.encode(_SYNONYM_VOCAB, convert_to_numpy=True)
+    except Exception:
+        return None
+    if isinstance(vecs, np.ndarray):
+        vecs = [vecs[i] for i in range(vecs.shape[0])]
+    out: Dict[str, np.ndarray] = {}
+    for term, vec in zip(_SYNONYM_VOCAB, vecs):
+        arr = np.asarray(vec, dtype="float32")
+        if arr.size:
+            norm = np.linalg.norm(arr)
+            if norm > 0:
+                out[term] = arr / norm
+    _SYNONYM_VEC_CACHE[str(emb_name)] = out
+    return out
+
+
+def _vector_synonyms(e: Optional[Eng], tokens: List[str], top_k: int = 3, min_score: float = 0.65) -> List[str]:
+    vectors = _get_synonym_vectors(e)
+    if not vectors:
+        return []
+    try:
+        token_vecs = e.emb.encode(tokens, convert_to_numpy=True)
+    except Exception:
+        return []
+    if isinstance(token_vecs, np.ndarray):
+        token_vecs = [token_vecs[i] for i in range(token_vecs.shape[0])]
+    candidates = []
+    vocab_items = list(vectors.items())
+    for tok, vec in zip(tokens, token_vecs):
+        arr = np.asarray(vec, dtype="float32")
+        norm = np.linalg.norm(arr)
+        if norm <= 0:
+            continue
+        arr = arr / norm
+        scored = []
+        for term, v in vocab_items:
+            score = float(np.dot(arr, v))
+            scored.append((score, term))
+        scored.sort(reverse=True)
+        for score, term in scored[: top_k + 2]:
+            if score >= min_score:
+                candidates.append(term)
+    return candidates
+
+
+def _expand_query(q: str, e: Optional[Eng] = None) -> Tuple[str, Dict[str, Any]]:
     q_clean = (q or "").strip()
     if not q_clean:
         return "", {"expansions": [], "rewrites": [], "query_rewritten": ""}
@@ -641,6 +696,13 @@ def _expand_query(q: str) -> Tuple[str, Dict[str, Any]]:
                 continue
             seen.add(key)
             expansions.append(syn)
+    vector_expansions = _vector_synonyms(e, tokens)
+    for syn in vector_expansions:
+        key = syn.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        expansions.append(syn)
 
     q_expanded = q_rewritten
     if expansions:
@@ -1793,7 +1855,7 @@ def run_query(
             q_expanded = q_expanded_override
             expand_meta = expansion_meta or {"expansions": [], "rewrites": [], "query_rewritten": q_expanded_override}
         else:
-            q_expanded, expand_meta = _expand_query(q_clean)
+            q_expanded, expand_meta = _expand_query(q_clean, e)
         q_expanded = q_expanded or q_clean
         q_embed = q_expanded
         q_lex = q_expanded
@@ -2128,7 +2190,7 @@ def run_queries(
     for q in queries:
         meta = _blank_meta()
         q_clean = (q or "").strip()
-        q_expanded, expand_meta = _expand_query(q_clean)
+        q_expanded, expand_meta = _expand_query(q_clean, e)
         q_embed = q_expanded or q_clean
         prepared.append({"q_expanded": q_expanded or q_clean, "expand_meta": expand_meta, "q_embed": q_embed})
         metas.append(meta)

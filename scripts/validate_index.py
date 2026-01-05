@@ -109,6 +109,17 @@ def _validate_faiss(report: CorpusReport, faiss_path: Path, manifest: Optional[D
             report.warnings.append(
                 f"index.ntotal ({index.ntotal}) does not match manifest index_ntotal ({expected_total})"
             )
+        cfg = manifest.get("cfg") if isinstance(manifest.get("cfg"), dict) else {}
+        expected_dim = None
+        for key in ("embed_dim", "embedding_dim", "vector_dim", "dim"):
+            val = cfg.get(key)
+            if isinstance(val, int):
+                expected_dim = val
+                break
+        if expected_dim is not None and index.d != expected_dim:
+            report.warnings.append(
+                f"index dimension ({index.d}) does not match manifest embed_dim ({expected_dim})"
+            )
 
 
 def _validate_sqlite(report: CorpusReport, sqlite_path: Path, manifest: Optional[Dict[str, Any]]) -> None:

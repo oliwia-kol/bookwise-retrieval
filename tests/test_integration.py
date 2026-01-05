@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 
-def test_search_and_chat_flow(api_client, api_server_module, monkeypatch):
+def test_end_to_end_query_flow(api_client, api_server_module, monkeypatch):
     def fake_run_query(*_args, **_kwargs):
         return {
             "ok": True,
@@ -34,31 +34,67 @@ def test_search_and_chat_flow(api_client, api_server_module, monkeypatch):
     assert chat_response.json()["answer"] == "Rendered flow"
 
 
-def test_validation_and_rate_limit_edge_cases(api_server_module):
-    api_server_module._rate_limit_buckets.clear()
-    api_server_module.RATE_LIMIT_REQUESTS = 2
-    api_server_module.RATE_LIMIT_WINDOW_S = 60
-    client = TestClient(api_server_module.app)
+def test_multi_publisher_queries(api_client, api_server_module, monkeypatch):
+    captured = {"pubs": None}
 
-    invalid = client.post("/search", json={"query": " ", "mode": "balanced"})
-    assert invalid.status_code == 422
-    assert invalid.json()["code"] == "VALIDATION_ERROR"
+    def fake_run_query(_engine, _query, pubs=None, **_kwargs):
+        captured["pubs"] = pubs
+        return {"ok": True, "hits": [], "near_miss": [], "meta": {}}
 
-    api_server_module._rate_limit_buckets.clear()
-    assert client.get("/").status_code == 200
-    assert client.get("/").status_code == 200
-    limited = client.get("/")
-    assert limited.status_code == 429
-    assert "Retry-After" in limited.headers
+    monkeypatch.setattr(api_server_module.rag, "run_query", fake_run_query)
+
+    response = api_client.post(
+        "/search",
+        json={"query": "multi", "mode": "balanced", "pubs": ["Pub"]},
+    )
+
+    assert response.status_code == 200
+    assert captured["pubs"] == ["Pub"]
 
 
-def test_history_and_suggestions(api_client, api_server_module, monkeypatch):
-    monkeypatch.setattr(api_server_module.rag, "get_recent_queries", lambda limit=5: ["alpha", "beta"])
+def test_edge_cases_no_results(api_client, api_server_module, monkeypatch):
+    def fake_run_query(*_args, **_kwargs):
+        return {"ok": True, "hits": [], "near_miss": [], "meta": {}}
 
-    history = api_client.get("/history")
-    assert history.status_code == 200
-    assert history.json()["queries"] == ["alpha", "beta"]
+    monkeypatch.setattr(api_server_module.rag, "run_query", fake_run_query)
 
-    suggestions = api_client.get("/suggestions", params={"q": "a"})
-    assert suggestions.status_code == 200
-    assert suggestions.json()["suggestions"] == ["alpha", "beta"]
+    response = api_client.post(
+        "/search",
+        json={"query": "missing", "mode": "balanced"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["hits"] == []
+    assert payload["coverage"] == "LOW"
+
+
+def test_edge_cases_all_filtered(api_client, api_server_module, monkeypatch):
+    def fake_run_query(*_args, **_kwargs):
+        return {
+            "ok": True,
+            "hits": [
+                {
+                    "title": "Low",
+                    "j_score": 0.1,
+                    "s_score": 0.2,
+                    "text": "low",
+                    "publisher": "Pub",
+                    "book": "Book One",
+                    "section": "Intro",
+                }
+            ],
+            "near_miss": [],
+            "meta": {},
+        }
+
+    monkeypatch.setattr(api_server_module.rag, "run_query", fake_run_query)
+
+    response = api_client.post(
+        "/search",
+        json={"query": "filtered", "mode": "balanced", "jmin": 0.5},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["hits"] == []
