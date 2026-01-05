@@ -77,10 +77,12 @@ export interface HealthResponse {
   engine_version: string;
 }
 
+// Chat types
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   evidence?: EvidenceHit[];
   timestamp: Date;
+  isLoading?: boolean;
 }
