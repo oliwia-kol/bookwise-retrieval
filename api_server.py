@@ -61,7 +61,7 @@ def _error_response(message: str, code: str, status_code: int, headers: Optional
 def _available_modes() -> set[str]:
     if ENGINE_AVAILABLE and hasattr(rag, "mode_options"):
         return {m.get("name", "").lower() for m in rag.mode_options() if m.get("name")}
-    return {"quick", "balanced", "thorough"}
+    return {"quick", "exact"}
 
 
 @app.exception_handler(HTTPException)
@@ -134,7 +134,7 @@ class SearchRequest(BaseModel):
     pubs: list[str] = []
     jmin: float = 0.0
     sort: str = "Judge"
-    mode: str = "balanced"
+    mode: str = "quick"
     show_near_miss: bool = True
     page: int = 1
     page_size: int = 10

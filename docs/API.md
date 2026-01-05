@@ -69,7 +69,7 @@ Searches the corpus and returns ranked hits.
   "pubs": ["OReilly"],
   "jmin": 0.3,
   "sort": "Judge",
-  "mode": "balanced",
+  "mode": "quick",
   "show_near_miss": true,
   "page": 1,
   "page_size": 10
@@ -118,7 +118,7 @@ Searches the corpus and returns ranked hits.
 - `query` must be non-empty.
 - `jmin` must be between 0 and 1.
 - `sort` must be `Judge` or `Semantic`.
-- `mode` must be one of the modes exposed by the engine (typically `quick`, `balanced`, `thorough`).
+- `mode` must be one of the modes exposed by the engine (currently `quick` or `exact`).
 - `page` must be ≥ 1; `page_size` must be between 1 and 50.
 
 ### `POST /chat`
