@@ -24,10 +24,10 @@ const DEFAULT_FILTERS: SearchFilters = {
 };
 
 const FEATURE_CHIPS = [
-  { icon: Sparkles, label: 'AI-Powered', color: 'text-[hsl(var(--color-orange))]' },
-  { icon: BookOpen, label: '3 Publishers', color: 'text-[hsl(var(--color-violet))]' },
-  { icon: Zap, label: 'Instant', color: 'text-[hsl(var(--color-yellow))]' },
-  { icon: Shield, label: 'Verified', color: 'text-[hsl(var(--color-green))]' },
+  { icon: Sparkles, label: 'AI-Powered', color: 'text-[hsl(var(--color-gold))]' },
+  { icon: BookOpen, label: '3 Publishers', color: 'text-[hsl(var(--color-lavender))]' },
+  { icon: Zap, label: 'Instant', color: 'text-[hsl(var(--color-honey))]' },
+  { icon: Shield, label: 'Verified', color: 'text-[hsl(var(--color-sage))]' },
 ];
 
 export function AppLayout() {
