@@ -8,6 +8,7 @@ torch==2.2.2+cpu
 torchvision==0.17.2+cpu
 torchaudio==2.2.2+cpu
 pytest==7.4.4
+httpx>=0.24.0
 
 # FastAPI backend for React frontend
 fastapi>=0.104.0
