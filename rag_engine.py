@@ -382,7 +382,8 @@ def fts_query_escape(q: str) -> str:
         if key in seen:
             continue
         seen.add(key)
-        safe_terms.append(f"\"{phrase_text.replace('\"', '\"\"')}\"")
+        escaped_phrase = phrase_text.replace('"', '""')
+        safe_terms.append(f"\"{escaped_phrase}\"")
 
     if not safe_terms:
         return ""
