@@ -30,58 +30,69 @@ export function LivingBackground({
           isActive ? "opacity-90" : "opacity-70"
         )}
       >
-        {/* Orange-coral blob - bottom left */}
+        {/* Gold blob - bottom left (warm anchor) */}
         <div 
           className="absolute w-[1000px] h-[1000px] rounded-full blur-[180px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(24 95% 50% / 0.25) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(45 75% 55% / 0.2) 0%, transparent 70%)',
             bottom: '-20%',
             left: '-10%',
             animationDelay: '0s',
           }}
         />
         
-        {/* Violet-purple blob - top right */}
+        {/* Lavender blob - top right (cool elegance) */}
         <div 
           className="absolute w-[800px] h-[800px] rounded-full blur-[150px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(262 83% 58% / 0.2) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(252 60% 68% / 0.18) 0%, transparent 70%)',
             top: '-10%',
             right: '-5%',
             animationDelay: '2s',
           }}
         />
         
-        {/* Rose-pink blob - center right */}
+        {/* Periwinkle blob - center right (blue-lavender bridge) */}
         <div 
           className="absolute w-[600px] h-[600px] rounded-full blur-[140px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(350 89% 60% / 0.18) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(230 55% 62% / 0.15) 0%, transparent 70%)',
             top: '40%',
             right: '10%',
             animationDelay: '4s',
           }}
         />
         
-        {/* Yellow-amber accent blob - top left */}
+        {/* Cream blob - top left (soft highlight) */}
         <div 
           className="absolute w-[500px] h-[500px] rounded-full blur-[120px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(45 100% 51% / 0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(48 50% 70% / 0.12) 0%, transparent 70%)',
             top: '5%',
             left: '15%',
             animationDelay: '3s',
           }}
         />
         
-        {/* Coral center glow */}
+        {/* Honey center glow (warm balance) */}
         <div 
           className="absolute w-[700px] h-[700px] rounded-full blur-[160px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(12 90% 58% / 0.1) 0%, transparent 60%)',
+            background: 'radial-gradient(circle, hsl(42 80% 50% / 0.08) 0%, transparent 60%)',
             top: '30%',
             left: '40%',
             animationDelay: '5s',
+          }}
+        />
+        
+        {/* Dusty rose accent - bottom right (subtle warmth) */}
+        <div 
+          className="absolute w-[400px] h-[400px] rounded-full blur-[100px] animate-breathe"
+          style={{
+            background: 'radial-gradient(circle, hsl(350 40% 68% / 0.1) 0%, transparent 70%)',
+            bottom: '15%',
+            right: '20%',
+            animationDelay: '6s',
           }}
         />
       </div>
