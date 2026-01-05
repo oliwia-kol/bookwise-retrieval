@@ -48,18 +48,22 @@ export function AppLayout() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle search result
+  // Handle search result - use ref to track processed queries
+  const processedQueryRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (searchResult && currentQuery) {
+    if (searchResult && currentQuery && currentQuery !== processedQueryRef.current) {
+      processedQueryRef.current = currentQuery;
+      
       // Remove loading message and add assistant response
       setMessages(prev => {
         const withoutLoading = prev.filter(m => !m.isLoading);
         
         // Create response based on results
         const responseContent = searchResult.hits.length > 0
-          ? `I found ${searchResult.hits.length} relevant sources for your query. Here are the key findings:\n\n${searchResult.hits.slice(0, 3).map((hit, i) => 
-              `**${i + 1}. ${hit.title}** (${hit.publisher})\n${hit.snippet}`
-            ).join('\n\n')}`
+          ? `I found **${searchResult.hits.length} relevant sources** for your query. Here are the key findings:\n\n${searchResult.hits.slice(0, 3).map((hit, i) => 
+              `**${i + 1}. ${hit.title}** _(${hit.publisher})_\n\n${hit.snippet}`
+            ).join('\n\n---\n\n')}`
           : "I couldn't find any relevant sources for your query. Try rephrasing or asking about a different topic.";
 
         return [...withoutLoading, {
@@ -99,6 +103,7 @@ export function AppLayout() {
   const handleNewChat = useCallback(() => {
     setMessages([]);
     setCurrentQuery('');
+    processedQueryRef.current = null;
   }, []);
 
   // Keyboard shortcuts
