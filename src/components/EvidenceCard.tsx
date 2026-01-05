@@ -62,11 +62,13 @@ export function EvidenceCard({
       style={{ animationDelay: `${animationDelay}ms` }}
       onClick={onSelect}
     >
-      {/* Subtle rainbow glow border on hover */}
+      {/* Delicate rainbow glow border on hover */}
       <div className={cn(
         "absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none",
-        "border border-primary/30",
-        "shadow-[0_0_20px_hsl(var(--glow-gold)/0.15),0_0_40px_hsl(var(--glow-purple)/0.08),0_0_60px_hsl(var(--glow-cyan)/0.05)]"
+        "border border-transparent",
+        "bg-gradient-to-r from-[hsl(var(--glow-pink)/0.2)] via-[hsl(var(--glow-purple)/0.2)] to-[hsl(var(--glow-cyan)/0.2)]",
+        "shadow-[0_0_15px_hsl(var(--glow-pink)/0.1),0_0_30px_hsl(var(--glow-purple)/0.08),0_0_45px_hsl(var(--glow-cyan)/0.06)]",
+        "[mask:linear-gradient(#fff_0_0)_content-box,linear-gradient(#fff_0_0)] [mask-composite:exclude] p-[1px]"
       )} />
 
       {/* Top row: Publisher + Title + Actions */}
