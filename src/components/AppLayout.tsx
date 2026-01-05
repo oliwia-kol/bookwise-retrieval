@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Sparkles, BookOpen, Zap, Shield } from 'lucide-react';
+import { Sparkles, BookOpen, Zap, Shield, Library, CheckCircle2 } from 'lucide-react';
 import { AppHeader } from './AppHeader';
 import { ChatMessage } from './chat/ChatMessage';
 import { ChatInput } from './chat/ChatInput';
@@ -24,10 +24,10 @@ const DEFAULT_FILTERS: SearchFilters = {
 };
 
 const FEATURE_CHIPS = [
-  { icon: Sparkles, label: 'AI-Powered', color: 'text-[hsl(var(--color-gold))]' },
-  { icon: BookOpen, label: '3 Publishers', color: 'text-[hsl(var(--color-lavender))]' },
-  { icon: Zap, label: 'Instant', color: 'text-[hsl(var(--color-honey))]' },
-  { icon: Shield, label: 'Verified', color: 'text-[hsl(var(--color-sage))]' },
+  { icon: Sparkles, label: 'AI-Powered', color: 'text-[hsl(var(--color-lavender))]' },
+  { icon: Library, label: '3 Publishers', color: 'text-[hsl(var(--color-coral))]' },
+  { icon: Zap, label: 'Instant', color: 'text-[hsl(var(--color-cyan))]' },
+  { icon: CheckCircle2, label: 'Verified', color: 'text-[hsl(var(--color-sage))]' },
 ];
 
 export function AppLayout() {
