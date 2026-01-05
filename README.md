@@ -18,8 +18,11 @@ source .venv/bin/activate  # Linux/Mac
 pip install -U pip
 pip install -r requirements.txt
 
-# Run FastAPI server
+# Run FastAPI server (development)
 uvicorn api_server:app --reload --host 0.0.0.0 --port 8000
+
+# Run FastAPI server (production)
+gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api_server:app
 ```
 
 ### Frontend Setup
@@ -45,6 +48,16 @@ npm run dev
 | `VITE_USE_MOCKS` | Use mock data instead of API | `true` |
 | `OMP_NUM_THREADS` | Limit CPU threads | `2` |
 | `MKL_NUM_THREADS` | Limit BLAS threads | `2` |
+
+### Deployment notes (backend)
+
+Use the FastAPI entrypoint in `api_server.py` and expose port 8000 on your platform.
+
+- **Development**: `uvicorn api_server:app --host 0.0.0.0 --port 8000`
+- **Production**: `gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api_server:app`
+- **Railway/Render**: set the start command to one of the above and expose port 8000.
+- **Codespaces**: forward port 8000 and set `VITE_API_URL` to the forwarded public URL.
+- **Dependencies**: ensure deploys install from `requirements.txt`.
 
 ---
 
