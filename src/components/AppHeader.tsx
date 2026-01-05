@@ -21,8 +21,8 @@ export function AppHeader({
   return (
     <header className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 bg-background/50 backdrop-blur-xl border-b border-border/10 relative z-20">
       <div className="flex items-center gap-3">
-        {/* Logo */}
-        <div className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl gradient-warm flex items-center justify-center glow-primary-subtle group animate-gentle-float">
+        {/* Logo with rainbow glow */}
+        <div className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl gradient-warm flex items-center justify-center animate-rainbow-glow group animate-gentle-float">
           <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12" />
         </div>
         <div>

@@ -23,7 +23,7 @@ export function LivingBackground({
       {/* Base dark background with warm tint */}
       <div className="absolute inset-0 bg-background" />
       
-      {/* Living mesh gradient - warm colors */}
+      {/* Living mesh gradient - balanced warm and cool */}
       <div 
         className={cn(
           "absolute inset-0 transition-opacity duration-1000 animate-mesh-flow",
@@ -32,67 +32,78 @@ export function LivingBackground({
       >
         {/* Gold blob - bottom left (warm anchor) */}
         <div 
-          className="absolute w-[1000px] h-[1000px] rounded-full blur-[180px] animate-breathe"
+          className="absolute w-[900px] h-[900px] rounded-full blur-[180px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(45 75% 55% / 0.2) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(45 70% 55% / 0.18) 0%, transparent 70%)',
             bottom: '-20%',
             left: '-10%',
             animationDelay: '0s',
           }}
         />
         
-        {/* Lavender blob - top right (cool elegance) */}
+        {/* Lavender blob - top right (cool anchor) */}
         <div 
           className="absolute w-[800px] h-[800px] rounded-full blur-[150px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(252 60% 68% / 0.18) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(255 55% 70% / 0.2) 0%, transparent 70%)',
             top: '-10%',
             right: '-5%',
             animationDelay: '2s',
           }}
         />
         
-        {/* Periwinkle blob - center right (blue-lavender bridge) */}
+        {/* Cyan blob - center right (cool accent) */}
         <div 
           className="absolute w-[600px] h-[600px] rounded-full blur-[140px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(230 55% 62% / 0.15) 0%, transparent 70%)',
-            top: '40%',
-            right: '10%',
+            background: 'radial-gradient(circle, hsl(185 55% 55% / 0.15) 0%, transparent 70%)',
+            top: '35%',
+            right: '5%',
             animationDelay: '4s',
           }}
         />
         
-        {/* Cream blob - top left (soft highlight) */}
+        {/* Coral blob - top left (warm accent) */}
         <div 
           className="absolute w-[500px] h-[500px] rounded-full blur-[120px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(48 50% 70% / 0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(15 65% 62% / 0.14) 0%, transparent 70%)',
             top: '5%',
-            left: '15%',
+            left: '10%',
             animationDelay: '3s',
           }}
         />
         
-        {/* Honey center glow (warm balance) */}
+        {/* Periwinkle center glow (cool bridge) */}
         <div 
           className="absolute w-[700px] h-[700px] rounded-full blur-[160px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(42 80% 50% / 0.08) 0%, transparent 60%)',
+            background: 'radial-gradient(circle, hsl(232 50% 65% / 0.1) 0%, transparent 60%)',
             top: '30%',
-            left: '40%',
+            left: '35%',
             animationDelay: '5s',
           }}
         />
         
-        {/* Dusty rose accent - bottom right (subtle warmth) */}
+        {/* Dusty rose accent - bottom center (warm bridge) */}
         <div 
-          className="absolute w-[400px] h-[400px] rounded-full blur-[100px] animate-breathe"
+          className="absolute w-[450px] h-[450px] rounded-full blur-[110px] animate-breathe"
           style={{
-            background: 'radial-gradient(circle, hsl(350 40% 68% / 0.1) 0%, transparent 70%)',
-            bottom: '15%',
-            right: '20%',
+            background: 'radial-gradient(circle, hsl(350 38% 70% / 0.12) 0%, transparent 70%)',
+            bottom: '10%',
+            left: '40%',
             animationDelay: '6s',
+          }}
+        />
+
+        {/* Sage accent - bottom right (natural balance) */}
+        <div 
+          className="absolute w-[350px] h-[350px] rounded-full blur-[90px] animate-breathe"
+          style={{
+            background: 'radial-gradient(circle, hsl(150 40% 52% / 0.1) 0%, transparent 70%)',
+            bottom: '20%',
+            right: '15%',
+            animationDelay: '7s',
           }}
         />
       </div>

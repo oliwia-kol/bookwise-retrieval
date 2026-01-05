@@ -10,19 +10,19 @@ interface SourceCardProps {
 
 const PUBLISHER_CONFIG: Record<string, { bg: string; text: string; border: string }> = {
   OReilly: { 
-    bg: 'bg-[hsl(24_95%_53%/0.1)]', 
-    text: 'text-[hsl(24_95%_60%)]',
-    border: 'border-[hsl(24_95%_53%/0.3)]',
+    bg: 'bg-[hsl(15_65%_62%/0.12)]', 
+    text: 'text-[hsl(15_65%_70%)]',
+    border: 'border-[hsl(15_65%_62%/0.3)]',
   },
   Manning: { 
-    bg: 'bg-[hsl(350_89%_60%/0.1)]', 
-    text: 'text-[hsl(350_89%_68%)]',
-    border: 'border-[hsl(350_89%_60%/0.3)]',
+    bg: 'bg-[hsl(255_55%_70%/0.12)]', 
+    text: 'text-[hsl(255_55%_78%)]',
+    border: 'border-[hsl(255_55%_70%/0.3)]',
   },
   Pearson: { 
-    bg: 'bg-[hsl(262_83%_58%/0.1)]', 
-    text: 'text-[hsl(262_83%_68%)]',
-    border: 'border-[hsl(262_83%_58%/0.3)]',
+    bg: 'bg-[hsl(185_55%_55%/0.12)]', 
+    text: 'text-[hsl(185_55%_65%)]',
+    border: 'border-[hsl(185_55%_55%/0.3)]',
   },
 };
 
