@@ -7,9 +7,15 @@ interface ChatInputProps {
   onSubmit: (message: string) => void;
   isLoading?: boolean;
   placeholder?: string;
+  disabled?: boolean;
 }
 
-export function ChatInput({ onSubmit, isLoading = false, placeholder }: ChatInputProps) {
+export function ChatInput({
+  onSubmit,
+  isLoading = false,
+  placeholder,
+  disabled = false,
+}: ChatInputProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -23,7 +29,7 @@ export function ChatInput({ onSubmit, isLoading = false, placeholder }: ChatInpu
   }, [value]);
 
   const handleSubmit = () => {
-    if (!value.trim() || isLoading) return;
+    if (!value.trim() || isLoading || disabled) return;
     onSubmit(value.trim());
     setValue('');
     if (textareaRef.current) {
@@ -75,13 +81,13 @@ export function ChatInput({ onSubmit, isLoading = false, placeholder }: ChatInpu
             "focus:outline-none focus:ring-0",
             "min-h-[24px] max-h-[200px] py-1"
           )}
-          disabled={isLoading}
+          disabled={isLoading || disabled}
         />
 
         {/* Submit button */}
         <Button
           onClick={handleSubmit}
-          disabled={!value.trim() || isLoading}
+          disabled={!value.trim() || isLoading || disabled}
           size="icon"
           className={cn(
             "h-9 w-9 rounded-xl shrink-0",

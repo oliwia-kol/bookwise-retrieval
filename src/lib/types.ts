@@ -75,6 +75,10 @@ export interface HealthResponse {
   corpus_count: number;
   publishers: Publisher[];
   engine_version: string;
+  engine_available: boolean;
+  corpora_ok: boolean;
+  ready: boolean;
+  error?: string;
 }
 
 // Chat types

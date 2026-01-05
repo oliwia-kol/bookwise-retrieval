@@ -39,7 +39,8 @@ export function AppLayout() {
 
   const { isDark, toggleTheme } = useTheme();
   const { data: health } = useHealth();
-  const { data: searchResult, isLoading } = useSearch(currentQuery, filters);
+  const isReady = Boolean(health?.ready);
+  const { data: searchResult, isLoading } = useSearch(currentQuery, filters, isReady);
 
   const availablePublishers: Publisher[] = health?.publishers || ['OReilly', 'Manning', 'Pearson'];
 
@@ -60,11 +61,13 @@ export function AppLayout() {
         const withoutLoading = prev.filter(m => !m.isLoading);
         
         // Create response based on results
-        const responseContent = searchResult.hits.length > 0
-          ? `I found **${searchResult.hits.length} relevant sources** for your query. Here are the key findings:\n\n${searchResult.hits.slice(0, 3).map((hit, i) => 
-              `**${i + 1}. ${hit.title}** _(${hit.publisher})_\n\n${hit.snippet}`
-            ).join('\n\n---\n\n')}`
-          : "I couldn't find any relevant sources for your query. Try rephrasing or asking about a different topic.";
+        const responseContent = !searchResult.ok
+          ? `Search is currently unavailable. ${searchResult.error || 'Please check the backend and try again.'}`
+          : searchResult.hits.length > 0
+            ? `I found **${searchResult.hits.length} relevant sources** for your query. Here are the key findings:\n\n${searchResult.hits.slice(0, 3).map((hit, i) => 
+                `**${i + 1}. ${hit.title}** _(${hit.publisher})_\n\n${hit.snippet}`
+              ).join('\n\n---\n\n')}`
+            : "I couldn't find any relevant sources for your query. Try rephrasing or asking about a different topic.";
 
         return [...withoutLoading, {
           id: `assistant-${Date.now()}`,
@@ -79,6 +82,7 @@ export function AppLayout() {
   }, [searchResult, currentQuery]);
 
   const handleSubmit = useCallback((message: string) => {
+    if (!isReady) return;
     // Add user message
     const userMessage: ChatMessageType = {
       id: `user-${Date.now()}`,
@@ -98,7 +102,7 @@ export function AppLayout() {
 
     setMessages(prev => [...prev, userMessage, loadingMessage]);
     setCurrentQuery(message);
-  }, []);
+  }, [isReady]);
 
   const handleNewChat = useCallback(() => {
     setMessages([]);
@@ -183,10 +187,12 @@ export function AppLayout() {
                   <button
                     key={query}
                     onClick={() => handleSubmit(query)}
+                    disabled={!isReady}
                     className={cn(
                       "px-4 py-2 rounded-xl text-sm",
                       "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
-                      "transition-all duration-300 hover:scale-[1.02]"
+                      "transition-all duration-300 hover:scale-[1.02]",
+                      !isReady && "cursor-not-allowed opacity-50 hover:scale-100"
                     )}
                   >
                     {query}
@@ -217,7 +223,14 @@ export function AppLayout() {
             <ChatInput
               onSubmit={handleSubmit}
               isLoading={isLoading}
-              placeholder={hasMessages ? "Ask a follow-up..." : "Ask about your technical library..."}
+              disabled={!isReady}
+              placeholder={
+                !isReady
+                  ? "Search will be available when the engine is ready..."
+                  : hasMessages
+                    ? "Ask a follow-up..."
+                    : "Ask about your technical library..."
+              }
             />
           </div>
         </div>

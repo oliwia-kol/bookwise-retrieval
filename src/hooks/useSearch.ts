@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { searchAPI, fetchHealth } from '@/lib/api';
 import type { SearchFilters } from '@/lib/types';
 
-export function useSearch(query: string, filters: SearchFilters) {
+export function useSearch(query: string, filters: SearchFilters, isReady = true) {
   return useQuery({
     queryKey: ['search', query, filters],
     queryFn: () => searchAPI(query, filters),
-    enabled: query.length > 0,
+    enabled: query.length > 0 && isReady,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }

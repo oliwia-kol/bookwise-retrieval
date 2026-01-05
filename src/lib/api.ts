@@ -1,7 +1,7 @@
 import type { SearchFilters, SearchResponse, HealthResponse, EvidenceHit, Publisher } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
-const USE_MOCK = !import.meta.env.VITE_API_URL;
+const USE_MOCK = import.meta.env.VITE_USE_MOCKS === 'true';
 
 // Topic-based mock data for contextual responses
 const MOCK_DATA: Record<string, EvidenceHit[]> = {
@@ -314,8 +314,43 @@ const MOCK_NEAR_MISS: EvidenceHit[] = [
 // Simulated API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const buildModeConfig = (filters: SearchFilters) => ({
+  name: filters.mode,
+  final_k: filters.mode === 'quick' ? 8 : 12,
+  mmr_k: filters.mode === 'quick' ? 16 : 28,
+  dense_k: filters.mode === 'quick' ? 24 : 40,
+  lex_k: filters.mode === 'quick' ? 24 : 40,
+});
+
+const buildSearchMeta = (filters: SearchFilters) => ({
+  mode_cfg: buildModeConfig(filters),
+  t: {
+    total: 0.45,
+    embed: 0.02,
+    retrieve: 0.31,
+    judge: 0.12,
+  },
+  n: {
+    dense_hits: 24,
+    lex_hits: 18,
+    fused: 32,
+    after_judge: 0,
+  },
+});
+
+const normalizeHealthResponse = (data: HealthResponse): HealthResponse => {
+  const engineAvailable = data.engine_available ?? data.ok;
+  const corporaOk = data.corpora_ok ?? data.corpus_count > 0;
+
+  return {
+    ...data,
+    engine_available: engineAvailable,
+    corpora_ok: corporaOk,
+    ready: data.ready ?? (engineAvailable && corporaOk),
+  };
+};
+
 export async function searchAPI(query: string, filters: SearchFilters): Promise<SearchResponse> {
-  // Use real API if configured
   if (!USE_MOCK) {
     try {
       const res = await fetch(`${API_BASE}/search`, {
@@ -326,12 +361,22 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
       if (!res.ok) throw new Error(`API error: ${res.status}`);
       return res.json();
     } catch (err) {
-      console.error('API request failed, falling back to mock:', err);
-      // Fall through to mock data
+      console.error('API request failed:', err);
+      return {
+        ok: false,
+        query,
+        hits: [],
+        near_miss: [],
+        coverage: 'LOW',
+        confidence: 0,
+        answer: null,
+        meta: buildSearchMeta(filters),
+        error: 'Unable to reach the search service.',
+      };
     }
   }
 
-  await delay(600); // Simulate network latency
+  await delay(600);
 
   // Detect topic from query
   const topic = detectTopic(query);
@@ -356,6 +401,8 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
   const limit = filters.mode === 'quick' ? 3 : 5;
   filteredHits = filteredHits.slice(0, limit);
 
+  const baseMeta = buildSearchMeta(filters);
+
   return {
     ok: true,
     query,
@@ -365,23 +412,9 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
     confidence: filteredHits.length > 0 ? filteredHits[0].j_score : 0,
     answer: null,
     meta: {
-      mode_cfg: {
-        name: filters.mode,
-        final_k: filters.mode === 'quick' ? 8 : 12,
-        mmr_k: filters.mode === 'quick' ? 16 : 28,
-        dense_k: filters.mode === 'quick' ? 24 : 40,
-        lex_k: filters.mode === 'quick' ? 24 : 40,
-      },
-      t: {
-        total: 0.45,
-        embed: 0.02,
-        retrieve: 0.31,
-        judge: 0.12,
-      },
+      ...baseMeta,
       n: {
-        dense_hits: 24,
-        lex_hits: 18,
-        fused: 32,
+        ...baseMeta.n,
         after_judge: filteredHits.length,
       },
     },
@@ -389,25 +422,38 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
 }
 
 export async function fetchHealth(): Promise<HealthResponse> {
-  // Use real API if configured
   if (!USE_MOCK) {
     try {
       const res = await fetch(`${API_BASE}/health`);
       if (!res.ok) throw new Error(`API error: ${res.status}`);
-      return res.json();
+      const data = await res.json();
+      return normalizeHealthResponse(data);
     } catch (err) {
-      console.error('Health check failed, falling back to mock:', err);
+      console.error('Health check failed:', err);
+      return normalizeHealthResponse({
+        ok: false,
+        corpus_count: 0,
+        publishers: [],
+        engine_version: 'unavailable',
+        engine_available: false,
+        corpora_ok: false,
+        ready: false,
+        error: 'Health check failed.',
+      });
     }
   }
 
   await delay(200);
 
-  return {
+  return normalizeHealthResponse({
     ok: true,
     corpus_count: 3,
     publishers: ['OReilly', 'Manning', 'Pearson'] as Publisher[],
     engine_version: '1.0.0',
-  };
+    engine_available: true,
+    corpora_ok: true,
+    ready: true,
+  });
 }
 
 export { API_BASE };
