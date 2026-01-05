@@ -1,19 +1,19 @@
 import { useState, useCallback } from 'react';
 import { AppHeader } from './AppHeader';
 import { SearchBar } from './SearchBar';
-import { FilterSidebar } from './FilterSidebar';
 import { EvidenceList } from './EvidenceList';
 import { ContextPanel } from './ContextPanel';
 import { StatusStrip } from './StatusStrip';
+import { SettingsModal } from './SettingsModal';
+import { FollowUpInput } from './FollowUpInput';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
-import { AuroraBackground } from './effects/AuroraBackground';
+import { LivingBackground } from './effects/LivingBackground';
 import { CursorSpotlight } from './effects/CursorSpotlight';
 import { useSearch, useHealth } from '@/hooks/useSearch';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
 import type { SearchFilters, EvidenceHit, Publisher } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 
 const DEFAULT_FILTERS: SearchFilters = {
@@ -26,15 +26,13 @@ const DEFAULT_FILTERS: SearchFilters = {
 };
 
 export function AppLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [contextOpen, setContextOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
   const [selectedHit, setSelectedHit] = useState<EvidenceHit | null>(null);
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
   const [recentQueries, setRecentQueries] = useState<string[]>([]);
-  const [showDebug, setShowDebug] = useState(false);
 
   const { isDark, toggleTheme } = useTheme();
   const { data: health } = useHealth();
@@ -51,154 +49,131 @@ export function AppLayout() {
     });
   }, [query]);
 
+  const handleFollowUp = useCallback((followUpQuery: string) => {
+    setQuery(followUpQuery);
+    setSubmittedQuery(followUpQuery);
+    setRecentQueries(prev => {
+      const filtered = prev.filter(q => q !== followUpQuery);
+      return [followUpQuery, ...filtered].slice(0, 10);
+    });
+  }, []);
+
   const handleSelectHit = useCallback((hit: EvidenceHit) => {
     setSelectedHit(hit);
     setContextOpen(true);
   }, []);
-
-  const handlePinToggle = useCallback((id: string) => {
-    setPinnedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
-
-  const pinnedHits = searchResult?.hits.filter(h => pinnedIds.has(h.id)) || [];
 
   // Keyboard shortcuts
   const { showShortcuts, setShowShortcuts } = useKeyboardShortcuts({
     hits: searchResult?.hits || [],
     selectedHit,
     onSelectHit: handleSelectHit,
-    onPinHit: handlePinToggle,
+    onPinHit: () => {},
     onClearSelection: () => setSelectedHit(null),
   });
 
-  const hasContextContent = selectedHit || pinnedHits.length > 0;
+  const hasResults = searchResult && searchResult.hits.length > 0;
 
   return (
-    <div className="h-screen flex flex-col bg-background relative overflow-hidden">
-      {/* Living Aurora Background */}
-      <AuroraBackground 
-        intensity="subtle" 
-        isSearching={isLoading}
-      />
+    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
+      {/* Living Background */}
+      <LivingBackground isSearching={isLoading} />
       
       {/* Cursor Spotlight Effect */}
       <CursorSpotlight intensity="subtle" />
       
-      {/* Main content - above aurora */}
-      <div className="relative z-10 h-full flex flex-col">
+      {/* Main content */}
+      <div className="relative z-10 flex-1 flex flex-col">
         <AppHeader 
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
-          onToggleDebug={() => setShowDebug(!showDebug)}
-          showDebug={showDebug}
+          onOpenSettings={() => setSettingsOpen(true)} 
           isDark={isDark}
           onToggleTheme={toggleTheme}
         />
 
-        <div className="flex-1 flex overflow-hidden">
-          {/* Desktop Sidebar */}
-          <aside 
-            className={cn(
-              "hidden lg:block border-r border-border/10 bg-background/50 backdrop-blur-xl transition-all duration-400 overflow-y-auto shrink-0",
-              sidebarOpen ? "w-64" : "w-0"
+        <main className="flex-1 flex flex-col px-4 sm:px-8 py-8">
+          {/* Hero section with search */}
+          <div className={cn(
+            "flex flex-col items-center justify-center transition-all duration-500",
+            hasResults ? "pt-4 pb-6" : "flex-1 pb-24"
+          )}>
+            {/* Title - only show when no results */}
+            {!hasResults && (
+              <div className="text-center mb-8 animate-fade-in">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 gradient-rainbow-text">
+                  Ask your library anything
+                </h2>
+                <p className="text-muted-foreground text-sm sm:text-base">
+                  Search across O'Reilly, Manning, and Pearson books
+                </p>
+              </div>
             )}
-          >
-            {sidebarOpen && (
-              <FilterSidebar
-                filters={filters}
-                onFiltersChange={setFilters}
-                availablePublishers={availablePublishers}
-              />
-            )}
-          </aside>
 
-          {/* Mobile Sidebar Sheet */}
-          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetContent side="left" className="w-72 p-0 lg:hidden bg-background/95 backdrop-blur-xl border-border/20">
-              <FilterSidebar
-                filters={filters}
-                onFiltersChange={setFilters}
-                availablePublishers={availablePublishers}
-              />
-            </SheetContent>
-          </Sheet>
+            <SearchBar
+              value={query}
+              onChange={setQuery}
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              recentQueries={recentQueries}
+            />
 
-          {/* Main Content */}
-          <main className="flex-1 flex flex-col overflow-hidden">
-            <div className="p-4 sm:p-5 lg:p-8 space-y-4 border-b border-border/10 bg-background/30 backdrop-blur-sm">
-              <SearchBar
-                value={query}
-                onChange={setQuery}
-                onSubmit={handleSubmit}
+            {/* Status strip */}
+            <div className="mt-4">
+              <StatusStrip
+                meta={searchResult?.meta || null}
+                hitCount={searchResult?.hits.length || 0}
                 isLoading={isLoading}
-                recentQueries={recentQueries}
               />
-              {searchResult && (
-                <StatusStrip
-                  meta={searchResult.meta}
-                  hitCount={searchResult.hits.length}
-                  coverage={searchResult.coverage}
-                  confidence={searchResult.confidence}
-                  isLoading={isLoading}
-                  hits={searchResult.hits}
-                  query={submittedQuery}
-                />
-              )}
             </div>
+          </div>
 
-            <div className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-8">
+          {/* Results */}
+          {hasResults && (
+            <div className="flex-1 max-w-4xl mx-auto w-full">
               <EvidenceList
-                hits={searchResult?.hits || []}
-                nearMiss={searchResult?.near_miss}
+                hits={searchResult.hits}
+                nearMiss={searchResult.near_miss}
                 isLoading={isLoading}
                 selectedId={selectedHit?.id}
                 onSelect={handleSelectHit}
-                pinnedIds={pinnedIds}
-                onPin={handlePinToggle}
+                pinnedIds={new Set()}
+                onPin={() => {}}
               />
-            </div>
-          </main>
-
-          {/* Desktop Context Panel */}
-          <aside 
-            className={cn(
-              "hidden lg:block border-l border-border/10 bg-background/50 backdrop-blur-xl transition-all duration-400 overflow-hidden shrink-0",
-              contextOpen && hasContextContent ? "w-80" : "w-0"
-            )}
-          >
-            <ContextPanel
-              hit={selectedHit}
-              onClose={() => setSelectedHit(null)}
-              pinnedHits={pinnedHits}
-              onUnpin={handlePinToggle}
-            />
-          </aside>
-
-          {/* Mobile Context Drawer */}
-          <Drawer open={!!(contextOpen && hasContextContent)} onOpenChange={(open) => { if (!open) setContextOpen(false); }}>
-            <DrawerContent className="lg:hidden max-h-[85vh] bg-background/95 backdrop-blur-xl border-border/20">
-              <div className="overflow-y-auto">
-                <ContextPanel
-                  hit={selectedHit}
-                  onClose={() => {
-                    setSelectedHit(null);
-                    setContextOpen(false);
-                  }}
-                  pinnedHits={pinnedHits}
-                  onUnpin={handlePinToggle}
+              
+              {/* Follow-up input */}
+              <div className="mt-8 pb-8">
+                <FollowUpInput 
+                  onSubmit={handleFollowUp}
+                  isLoading={isLoading}
                 />
               </div>
-            </DrawerContent>
-          </Drawer>
-        </div>
+            </div>
+          )}
+        </main>
       </div>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        filters={filters}
+        onFiltersChange={setFilters}
+        availablePublishers={availablePublishers}
+      />
+
+      {/* Mobile Context Drawer */}
+      <Drawer open={contextOpen && !!selectedHit} onOpenChange={(open) => { if (!open) setContextOpen(false); }}>
+        <DrawerContent className="max-h-[85vh] bg-background/95 backdrop-blur-xl border-border/20">
+          <div className="overflow-y-auto">
+            <ContextPanel
+              hit={selectedHit}
+              onClose={() => {
+                setSelectedHit(null);
+                setContextOpen(false);
+              }}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal 

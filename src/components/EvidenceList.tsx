@@ -1,4 +1,4 @@
-import { Search, BookOpen } from 'lucide-react';
+import { Search, BookOpen, Sparkles } from 'lucide-react';
 import { EvidenceCard } from './EvidenceCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { EvidenceHit } from '@/lib/types';
@@ -15,23 +15,21 @@ interface EvidenceListProps {
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-3 sm:space-y-4">
-      {[...Array(4)].map((_, i) => (
+    <div className="space-y-4">
+      {[...Array(3)].map((_, i) => (
         <div 
           key={i} 
-          className="rounded-xl p-3 sm:p-4 card-premium animate-pulse"
+          className="rounded-2xl p-5 glass-card animate-pulse"
           style={{ animationDelay: `${i * 100}ms` }}
         >
-          <div className="flex items-center gap-2 sm:gap-3 mb-3">
-            <Skeleton className="h-5 w-14 sm:w-16 rounded-md" />
-            <Skeleton className="h-4 w-32 sm:w-48" />
+          <div className="flex items-center gap-3 mb-3">
+            <Skeleton className="h-5 w-16 rounded-lg" />
+            <Skeleton className="h-4 w-48" />
           </div>
-          <Skeleton className="h-3 w-24 sm:w-32 mb-2" />
-          <Skeleton className="h-14 sm:h-16 w-full mb-3" />
+          <Skeleton className="h-3 w-32 mb-2" />
+          <Skeleton className="h-16 w-full mb-3" />
           <div className="flex items-center gap-3">
-            <Skeleton className="h-5 w-20" />
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="h-3 w-12" />
+            <Skeleton className="h-6 w-20 rounded-lg" />
           </div>
         </div>
       ))}
@@ -41,25 +39,25 @@ function LoadingSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center h-64 sm:h-80 text-center animate-fade-in">
-      <div className="relative mb-4 sm:mb-6">
-        <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl gradient-premium border border-border/30 flex items-center justify-center">
-          <BookOpen className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
+    <div className="flex flex-col items-center justify-center h-64 text-center animate-fade-in">
+      <div className="relative mb-6">
+        <div className="h-16 w-16 rounded-2xl glass-card flex items-center justify-center">
+          <BookOpen className="h-7 w-7 text-muted-foreground" />
         </div>
-        <div className="absolute -bottom-1 -right-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full gradient-gold flex items-center justify-center glow-gold-subtle">
-          <Search className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-background" />
+        <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full gradient-primary flex items-center justify-center glow-primary-subtle">
+          <Sparkles className="h-3 w-3 text-white" />
         </div>
       </div>
-      <h3 className="text-base sm:text-lg font-medium mb-2">Ready to explore</h3>
-      <p className="text-xs sm:text-sm text-muted-foreground max-w-xs px-4">
-        Enter a query above to search across O'Reilly, Manning, and Pearson technical books.
+      <h3 className="text-lg font-medium mb-2 gradient-hero-text">Ready to explore</h3>
+      <p className="text-sm text-muted-foreground max-w-xs">
+        Enter a query above to search across your technical library.
       </p>
-      <div className="mt-4 flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
-        <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border/50 font-mono">/</kbd>
-        <span>to focus search</span>
-        <span className="mx-2">•</span>
-        <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border/50 font-mono">?</kbd>
-        <span>for shortcuts</span>
+      <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+        <kbd className="px-2 py-1 rounded-lg bg-secondary/50 border border-border/30 font-mono text-[10px]">/</kbd>
+        <span>to focus</span>
+        <span className="mx-2 opacity-50">•</span>
+        <kbd className="px-2 py-1 rounded-lg bg-secondary/50 border border-border/30 font-mono text-[10px]">?</kbd>
+        <span>shortcuts</span>
       </div>
     </div>
   );
@@ -71,8 +69,6 @@ export function EvidenceList({
   isLoading = false,
   selectedId,
   onSelect,
-  pinnedIds = new Set(),
-  onPin,
 }: EvidenceListProps) {
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -83,40 +79,36 @@ export function EvidenceList({
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6">
       {/* Main results */}
-      <div className="space-y-2 sm:space-y-3">
+      <div className="space-y-3">
         {hits.map((hit, index) => (
           <EvidenceCard
             key={hit.id}
             hit={hit}
             isSelected={selectedId === hit.id}
             onSelect={() => onSelect?.(hit)}
-            isPinned={pinnedIds.has(hit.id)}
-            onPin={() => onPin?.(hit.id)}
-            animationDelay={index * 50}
+            animationDelay={index * 60}
           />
         ))}
       </div>
 
       {/* Near-miss results */}
       {nearMiss && nearMiss.length > 0 && (
-        <div className="animate-fade-in" style={{ animationDelay: `${hits.length * 50 + 100}ms` }}>
-          <div className="flex items-center gap-3 mb-3 sm:mb-4">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/50 to-transparent" />
-            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Near Misses</span>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+        <div className="animate-fade-in" style={{ animationDelay: `${hits.length * 60 + 100}ms` }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/40 to-transparent" />
+            <span className="text-xs text-muted-foreground uppercase tracking-widest">Related</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/40 to-transparent" />
           </div>
-          <div className="space-y-2 sm:space-y-3 opacity-60 hover:opacity-100 transition-opacity duration-300">
+          <div className="space-y-3 opacity-70 hover:opacity-100 transition-opacity duration-300">
             {nearMiss.map((hit, index) => (
               <EvidenceCard
                 key={hit.id}
                 hit={hit}
                 isSelected={selectedId === hit.id}
                 onSelect={() => onSelect?.(hit)}
-                isPinned={pinnedIds.has(hit.id)}
-                onPin={() => onPin?.(hit.id)}
-                animationDelay={(hits.length + index) * 50 + 150}
+                animationDelay={(hits.length + index) * 60 + 150}
               />
             ))}
           </div>
