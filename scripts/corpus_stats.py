@@ -7,7 +7,7 @@ import importlib.util
 import json
 import os
 import sqlite3
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -30,6 +30,10 @@ class CorpusStats:
     chunks: int | None
     documents: int | None
     manifest_index_ntotal: int | None
+    avg_chunk_len: float | None
+    min_chunk_len: int | None
+    max_chunk_len: int | None
+    length_buckets: dict[str, int] = field(default_factory=dict)
 
 
 def resolve_data_root(explicit: Optional[str]) -> Path:
@@ -80,18 +84,38 @@ def _load_index_stats(path: Path) -> tuple[int | None, int | None]:
     return int(index.ntotal), int(index.d)
 
 
-def _load_sqlite_stats(path: Path) -> tuple[int | None, int | None]:
+def _load_sqlite_stats(path: Path) -> tuple[int | None, int | None, float | None, int | None, int | None, dict[str, int]]:
     try:
         con = sqlite3.connect(str(path))
     except sqlite3.Error:
-        return None, None
+        return None, None, None, None, None, {}
     try:
         cur = con.cursor()
         chunks = cur.execute("SELECT count(*) FROM chunks").fetchone()[0]
         documents = cur.execute("SELECT count(DISTINCT fp) FROM chunks").fetchone()[0]
-        return int(chunks), int(documents)
+        avg_len = cur.execute("SELECT avg(length(tx)) FROM chunks").fetchone()[0]
+        min_len = cur.execute("SELECT min(length(tx)) FROM chunks").fetchone()[0]
+        max_len = cur.execute("SELECT max(length(tx)) FROM chunks").fetchone()[0]
+        buckets = {
+            "0-200": cur.execute("SELECT count(*) FROM chunks WHERE length(tx) <= 200").fetchone()[0],
+            "201-500": cur.execute(
+                "SELECT count(*) FROM chunks WHERE length(tx) BETWEEN 201 AND 500"
+            ).fetchone()[0],
+            "501-1000": cur.execute(
+                "SELECT count(*) FROM chunks WHERE length(tx) BETWEEN 501 AND 1000"
+            ).fetchone()[0],
+            "1001+": cur.execute("SELECT count(*) FROM chunks WHERE length(tx) >= 1001").fetchone()[0],
+        }
+        return (
+            int(chunks),
+            int(documents),
+            float(avg_len) if avg_len is not None else None,
+            int(min_len) if min_len is not None else None,
+            int(max_len) if max_len is not None else None,
+            {k: int(v) for k, v in buckets.items()},
+        )
     except sqlite3.Error:
-        return None, None
+        return None, None, None, None, None, {}
     finally:
         con.close()
 
@@ -107,9 +131,17 @@ def gather_stats(name: str, data_root: Path) -> CorpusStats:
     if index_path.exists():
         index_ntotal, index_dim = _load_index_stats(index_path)
 
-    chunks = documents = None
+    chunks = documents = avg_chunk_len = min_chunk_len = max_chunk_len = None
+    length_buckets: dict[str, int] = {}
     if sqlite_path.exists():
-        chunks, documents = _load_sqlite_stats(sqlite_path)
+        (
+            chunks,
+            documents,
+            avg_chunk_len,
+            min_chunk_len,
+            max_chunk_len,
+            length_buckets,
+        ) = _load_sqlite_stats(sqlite_path)
 
     manifest_index_ntotal = None
     if manifest_path.exists():
@@ -127,6 +159,10 @@ def gather_stats(name: str, data_root: Path) -> CorpusStats:
         chunks=chunks,
         documents=documents,
         manifest_index_ntotal=manifest_index_ntotal,
+        avg_chunk_len=avg_chunk_len,
+        min_chunk_len=min_chunk_len,
+        max_chunk_len=max_chunk_len,
+        length_buckets=length_buckets,
     )
 
 
@@ -141,12 +177,13 @@ def print_stats(stats: list[CorpusStats]) -> None:
         "Index NTOTAL",
         "Index Dim",
         "Manifest NTOTAL",
+        "Index Size",
     )
-    widths = [max(len(str(getattr(s, "name"))) for s in stats), 8, 6, 13, 9, 15]
+    widths = [max(len(str(getattr(s, "name"))) for s in stats), 8, 6, 13, 9, 15, 11]
     print(
-        f"{header[0]:<{widths[0]}}  {header[1]:>8}  {header[2]:>6}  {header[3]:>13}  {header[4]:>9}  {header[5]:>15}"
+        f"{header[0]:<{widths[0]}}  {header[1]:>8}  {header[2]:>6}  {header[3]:>13}  {header[4]:>9}  {header[5]:>15}  {header[6]:>11}"
     )
-    print("-" * (sum(widths) + 15))
+    print("-" * (sum(widths) + 19))
     for s in stats:
         print(
             f"{s.name:<{widths[0]}}  "
@@ -154,8 +191,13 @@ def print_stats(stats: list[CorpusStats]) -> None:
             f"{s.documents if s.documents is not None else '-':>6}  "
             f"{s.index_ntotal if s.index_ntotal is not None else '-':>13}  "
             f"{s.index_dim if s.index_dim is not None else '-':>9}  "
-            f"{s.manifest_index_ntotal if s.manifest_index_ntotal is not None else '-':>15}"
+            f"{s.manifest_index_ntotal if s.manifest_index_ntotal is not None else '-':>15}  "
+            f"{s.index_bytes if s.index_bytes is not None else '-':>11}"
         )
+        if s.avg_chunk_len is not None:
+            print(
+                f"  length avg/min/max: {s.avg_chunk_len:.1f}/{s.min_chunk_len}/{s.max_chunk_len} | buckets: {s.length_buckets}"
+            )
 
 
 def parse_args() -> argparse.Namespace:

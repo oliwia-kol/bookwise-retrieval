@@ -173,7 +173,7 @@ Returns recent query history.
 
 **Query parameters**
 
-- `limit` (integer, default: 5, min: 1, max: 100)
+- `limit` (integer, default: 20, min: 1, max: 100)
 
 **Response**
 
@@ -183,7 +183,7 @@ Returns recent query history.
 
 ### `GET /stats`
 
-Returns startup report and corpus status.
+Returns startup report and corpus status, plus per-publisher statistics when available.
 
 **Response**
 
@@ -193,6 +193,15 @@ Returns startup report and corpus status.
   "startup_report": {"OReilly": true, "Manning": true},
   "corp_status": {
     "OReilly": {"exists": true, "faiss": true, "db": true, "manifest": true}
+  },
+  "publisher_stats": {
+    "OReilly": {
+      "publisher": "OReilly",
+      "chunks": 12345,
+      "documents": 240,
+      "avg_chunk_length": 712.4,
+      "index_size_bytes": 84934612
+    }
   }
 }
 ```
@@ -210,3 +219,13 @@ Errors follow a consistent shape:
 ```
 
 Common error codes include `ENGINE_UNAVAILABLE`, `EMPTY_CORPUS`, `MISSING_PUBLISHERS`, `SEARCH_TIMEOUT`, and `SEARCH_ERROR`.
+
+**Example error response**
+
+```json
+{
+  "ok": false,
+  "error": "Publishers not available: FooPress",
+  "code": "MISSING_PUBLISHERS"
+}
+```

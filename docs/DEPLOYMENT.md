@@ -39,6 +39,28 @@ gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api_server:app
 
 Add a reverse proxy (Nginx, Caddy) in front for TLS termination and request size limits.
 
+## Codespaces setup
+
+1. Launch the Codespace from the repository.
+2. Open a terminal and install dependencies:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. Ensure corpus data is mounted under `.data/` or `data/` (or set `RAG_DATA_ROOT`).
+4. Start the API:
+   ```bash
+   uvicorn api_server:app --host 0.0.0.0 --port 8000
+   ```
+5. For the frontend, run `npm install` and `npm run dev` with `VITE_API_URL` pointing at the forwarded backend port.
+
+## Production deployment options
+
+- **VM + systemd**: run Gunicorn/Uvicorn under systemd with `RAG_DATA_ROOT` set to a persistent volume.
+- **Containers**: package the backend and data volume into a Docker image or bind-mount the data root.
+- **Managed platforms**: deploy the API to services like Render, Fly.io, or AWS ECS, and host the frontend on a static host.
+
 ## Frontend (React)
 
 ```bash

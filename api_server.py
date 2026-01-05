@@ -4,6 +4,7 @@ import asyncio
 from collections import deque
 import logging
 import math
+import sqlite3
 import time
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
@@ -404,7 +405,7 @@ async def suggestions(q: str = ""):
 
 
 @app.get("/history")
-async def history(limit: int = Query(5, ge=1, le=100)):
+async def history(limit: int = Query(20, ge=1, le=100)):
     """Get recent query history."""
     if not ENGINE_AVAILABLE or not hasattr(rag, "get_recent_queries"):
         raise HTTPException(
@@ -414,16 +415,53 @@ async def history(limit: int = Query(5, ge=1, le=100)):
     return {"ok": True, "queries": rag.get_recent_queries(limit=limit)}
 
 
+def _publisher_stats() -> dict[str, dict]:
+    stats = {}
+    for pub, db_path in getattr(ENGINE, "dbp", {}).items():
+        db_stats = {
+            "publisher": pub,
+            "chunks": None,
+            "documents": None,
+            "avg_chunk_length": None,
+            "index_size_bytes": None,
+        }
+        try:
+            if db_path.exists():
+                con = sqlite3.connect(str(db_path))
+                cur = con.cursor()
+                db_stats["chunks"] = cur.execute("SELECT count(*) FROM chunks").fetchone()[0]
+                db_stats["documents"] = cur.execute("SELECT count(DISTINCT fp) FROM chunks").fetchone()[0]
+                avg_len = cur.execute("SELECT avg(length(tx)) FROM chunks").fetchone()[0]
+                db_stats["avg_chunk_length"] = float(avg_len) if avg_len is not None else None
+                con.close()
+        except Exception:
+            pass
+        try:
+            ix_path = db_path.parent / "index.faiss"
+            if ix_path.exists():
+                db_stats["index_size_bytes"] = ix_path.stat().st_size
+        except Exception:
+            pass
+        stats[pub] = db_stats
+    return stats
+
+
 @app.get("/stats")
 async def stats():
-    """Get corpus status and startup report."""
+    """Return detailed corpus statistics per publisher."""
     if not ENGINE_AVAILABLE:
         raise HTTPException(
             status_code=503,
             detail={"message": "RAG engine not available", "code": "ENGINE_UNAVAILABLE"},
         )
     report = rag.get_startup_report(ENGINE) if hasattr(rag, "get_startup_report") else {}
-    return {"ok": True, "startup_report": report, "corp_status": getattr(ENGINE, "corp_status", {})}
+    detailed = _publisher_stats()
+    return {
+        "ok": True,
+        "startup_report": report,
+        "corp_status": getattr(ENGINE, "corp_status", {}),
+        "publisher_stats": detailed,
+    }
 
 
 if __name__ == "__main__":

@@ -1,5 +1,22 @@
 # Architecture Overview
 
+## System diagram (logical)
+
+```
+┌───────────────┐        ┌─────────────────┐        ┌──────────────────────┐
+│ React UI      │ <----> │ FastAPI Service │ <----> │ RAG Engine            │
+│ (src/)        │        │ (api_server.py) │        │ (rag_engine.py)       │
+└───────────────┘        └─────────────────┘        └──────────────────────┘
+                                                             │
+                                                             v
+                                                    ┌──────────────────────┐
+                                                    │ Data Root (.data/)    │
+                                                    │ - index.faiss         │
+                                                    │ - meta.sqlite         │
+                                                    │ - manifest.json       │
+                                                    └──────────────────────┘
+```
+
 ## High-level components
 
 - **Data root** (`.data/`, `data/`, or `RAG_DATA_ROOT`): Stores per-publisher FAISS indexes, SQLite metadata, and manifest files.

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import tarfile
 from datetime import datetime
@@ -53,7 +54,28 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Overwrite the output file if it already exists.",
     )
+    parser.add_argument(
+        "--metadata-json",
+        help="Write metadata JSON describing the backup contents.",
+    )
+    parser.add_argument(
+        "--since",
+        help="Only include files modified after this timestamp (epoch seconds or ISO 8601).",
+    )
     return parser.parse_args()
+
+
+def _parse_since(value: Optional[str]) -> Optional[float]:
+    if not value:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        pass
+    try:
+        return datetime.fromisoformat(value).timestamp()
+    except ValueError:
+        return None
 
 
 def main() -> int:
@@ -73,16 +95,54 @@ def main() -> int:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    since_ts = _parse_since(args.since)
+    metadata = {
+        "created_at": datetime.utcnow().isoformat() + "Z",
+        "data_root": str(data_root),
+        "publishers": [],
+        "since": since_ts,
+    }
+
     with tarfile.open(output_path, mode="w:gz") as tar:
         for name in publishers:
             corpus_path = data_root / name
             if not corpus_path.exists():
                 print(f"Skipping missing corpus: {name}")
                 continue
-            tar.add(corpus_path, arcname=corpus_path.relative_to(data_root))
-            print(f"Added {name} from {corpus_path}")
+            entries = []
+            for path in corpus_path.rglob("*"):
+                if path.is_dir():
+                    continue
+                stat = path.stat()
+                if since_ts is not None and stat.st_mtime < since_ts:
+                    continue
+                arcname = path.relative_to(data_root)
+                tar.add(path, arcname=arcname)
+                entries.append(
+                    {
+                        "path": str(arcname),
+                        "bytes": stat.st_size,
+                        "mtime": stat.st_mtime,
+                    }
+                )
+            metadata["publishers"].append(
+                {
+                    "name": name,
+                    "path": str(corpus_path),
+                    "entries": entries,
+                    "entry_count": len(entries),
+                }
+            )
+            print(f"Added {name} from {corpus_path} ({len(entries)} files)")
 
     print(f"Backup written to {output_path}")
+    metadata_path = args.metadata_json
+    if metadata_path:
+        out_path = Path(metadata_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with out_path.open("w", encoding="utf-8") as handle:
+            json.dump(metadata, handle, indent=2)
+        print(f"Metadata written to {out_path}")
     return 0
 
 
