@@ -39,6 +39,27 @@ gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api_server:app
 
 Add a reverse proxy (Nginx, Caddy) in front for TLS termination and request size limits.
 
+### Managed platforms (Railway/Render/Fly)
+
+Use the FastAPI entrypoint in `api_server.py` and expose port 8000.
+
+**Start commands**
+
+- Development:
+  ```bash
+  uvicorn api_server:app --host 0.0.0.0 --port 8000
+  ```
+- Production:
+  ```bash
+  gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api_server:app
+  ```
+
+**Platform-specific notes**
+
+- **Railway/Render**: set the start command to one of the above and expose port 8000.
+- **Codespaces**: forward port 8000 and use the public URL for `VITE_API_URL`.
+- **Dependencies**: ensure deploys install from `requirements.txt`.
+
 ## Codespaces setup
 
 1. Launch the Codespace from the repository.
