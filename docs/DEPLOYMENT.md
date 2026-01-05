@@ -107,7 +107,8 @@ The backend expects per-publisher corpora:
 └── Pearson/
 ```
 
-Set `RAG_DATA_ROOT` when the data lives outside the repo.
+Set `RAG_DATA_ROOT` when the data lives outside the repo (for example, a persistent volume on Railway/Render).
+Confirm the mounted volume includes both `index.faiss` and `meta.sqlite` per publisher so the backend reports the corpus as ready.
 
 ## Operational checks
 

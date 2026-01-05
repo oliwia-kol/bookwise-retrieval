@@ -52,6 +52,7 @@ Each publisher has a folder under the data root:
 ```
 
 The manifest captures build metadata and index size for validation.
+The backend considers a publisher ready only when both `index.faiss` and `meta.sqlite` are present in its folder.
 
 ## Observability
 

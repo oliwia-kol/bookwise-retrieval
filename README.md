@@ -108,7 +108,7 @@ streamlit run app.py
 
 ## Data layout (required corpora)
 
-Place CPU-friendly indexes under `.data/` (preferred for keeping artifacts out of sight) or `data/` using the same structure for each publisher. You can also override the location with `RAG_DATA_ROOT`.
+Place CPU-friendly indexes under `.data/<publisher>/` (preferred for keeping artifacts out of sight) or `data/<publisher>/` using the same structure for each publisher. You can also override the location with `RAG_DATA_ROOT`.
 
 ```
 .data/
@@ -126,7 +126,7 @@ Place CPU-friendly indexes under `.data/` (preferred for keeping artifacts out o
     └── manifest.json
 ```
 
-Only the index artifacts are needed; source PDFs/EPUBs are not required.
+Only the index artifacts are needed; source PDFs/EPUBs are not required. The backend only marks a corpus as ready when both `index.faiss` and `meta.sqlite` exist for a publisher.
 
 ## Checks and tests
 
