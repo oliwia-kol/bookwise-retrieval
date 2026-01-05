@@ -15,16 +15,16 @@ interface EvidenceCardProps {
 }
 
 const TIER_CONFIG: Record<JudgeTier, { bg: string; text: string; glow: string }> = {
-  Strong: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', glow: 'shadow-emerald-500/30' },
+  Strong: { bg: 'bg-[hsl(170_45%_75%/0.15)]', text: 'text-[hsl(170_45%_75%)]', glow: 'shadow-[hsl(170_45%_75%/0.3)]' },
   Solid: { bg: 'bg-primary/15', text: 'text-primary', glow: 'shadow-primary/30' },
-  Weak: { bg: 'bg-amber-500/15', text: 'text-amber-400', glow: 'shadow-amber-500/30' },
+  Weak: { bg: 'bg-[hsl(20_60%_78%/0.15)]', text: 'text-[hsl(20_60%_78%)]', glow: 'shadow-[hsl(20_60%_78%/0.3)]' },
   Poor: { bg: 'bg-destructive/15', text: 'text-destructive', glow: 'shadow-destructive/30' },
 };
 
 const PUBLISHER_CONFIG: Record<string, { bg: string; text: string; accent: string }> = {
-  OReilly: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', accent: 'border-emerald-500/30' },
-  Manning: { bg: 'bg-rose-500/10', text: 'text-rose-400', accent: 'border-rose-500/30' },
-  Pearson: { bg: 'bg-sky-500/10', text: 'text-sky-400', accent: 'border-sky-500/30' },
+  OReilly: { bg: 'bg-[hsl(170_45%_75%/0.1)]', text: 'text-[hsl(170_45%_75%)]', accent: 'border-[hsl(170_45%_75%/0.3)]' },
+  Manning: { bg: 'bg-[hsl(340_55%_78%/0.1)]', text: 'text-[hsl(340_55%_78%)]', accent: 'border-[hsl(340_55%_78%/0.3)]' },
+  Pearson: { bg: 'bg-[hsl(200_60%_78%/0.1)]', text: 'text-[hsl(200_60%_78%)]', accent: 'border-[hsl(200_60%_78%/0.3)]' },
 };
 
 export function EvidenceCard({ 
@@ -62,17 +62,17 @@ export function EvidenceCard({
       style={{ animationDelay: `${animationDelay}ms` }}
       onClick={onSelect}
     >
-      {/* Delicate pastel rainbow border on hover */}
+      {/* Delicate pastel border on hover */}
       <div 
         className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, hsl(330 70% 80% / 0.6), hsl(270 70% 80% / 0.6), hsl(200 70% 80% / 0.6))',
+          background: 'linear-gradient(135deg, hsl(250 60% 78% / 0.5), hsl(340 55% 78% / 0.4), hsl(200 60% 78% / 0.5))',
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
           mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
           WebkitMaskComposite: 'xor',
           maskComposite: 'exclude',
           padding: '1px',
-          boxShadow: '0 0 15px hsl(330 70% 80% / 0.12), 0 0 30px hsl(270 70% 80% / 0.08), 0 0 45px hsl(200 70% 80% / 0.06)'
+          boxShadow: '0 0 12px hsl(250 60% 78% / 0.1), 0 0 24px hsl(340 55% 78% / 0.06), 0 0 36px hsl(200 60% 78% / 0.04)'
         }}
       />
 

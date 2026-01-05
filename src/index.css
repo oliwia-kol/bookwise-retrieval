@@ -2,9 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* RAG Books Search — Premium Dark Theme
-   True black background, golden accents, rainbow gradients
-   Ultra-premium, futuristic designer aesthetic
+/* RAG Books Search — Refined Pastel Theme
+   Apple-inspired minimalism with soft pastel accents
+   Clean, futuristic, tasteful aesthetic
 */
 
 @layer base {
@@ -18,8 +18,8 @@
     --popover: 0 0% 6%;
     --popover-foreground: 0 0% 95%;
 
-    /* Golden premium accent */
-    --primary: 43 100% 50%;
+    /* Soft lavender primary */
+    --primary: 250 60% 75%;
     --primary-foreground: 0 0% 4%;
 
     --secondary: 0 0% 12%;
@@ -28,35 +28,44 @@
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 55%;
 
-    --accent: 43 100% 50%;
+    /* Soft mint accent */
+    --accent: 170 45% 70%;
     --accent-foreground: 0 0% 4%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 55% 65%;
     --destructive-foreground: 0 0% 95%;
 
     --border: 0 0% 16%;
     --input: 0 0% 16%;
-    --ring: 43 100% 50%;
+    --ring: 250 60% 75%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 3%;
     --sidebar-foreground: 0 0% 60%;
-    --sidebar-primary: 43 100% 50%;
+    --sidebar-primary: 250 60% 75%;
     --sidebar-primary-foreground: 0 0% 4%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 43 100% 50%;
+    --sidebar-ring: 250 60% 75%;
 
-    /* Premium glow colors */
-    --glow-gold: 43 100% 50%;
-    --glow-success: 142 76% 46%;
-    --glow-warning: 38 92% 50%;
-    --glow-error: 0 84% 60%;
-    --glow-purple: 270 95% 60%;
-    --glow-cyan: 186 100% 50%;
-    --glow-pink: 330 100% 60%;
+    /* Pastel palette for glows and accents */
+    --pastel-lavender: 250 60% 78%;
+    --pastel-rose: 340 55% 78%;
+    --pastel-peach: 20 60% 78%;
+    --pastel-mint: 170 45% 75%;
+    --pastel-sky: 200 60% 78%;
+    --pastel-lilac: 280 50% 78%;
+    
+    /* Legacy glow mappings (updated to pastel) */
+    --glow-gold: 250 60% 75%;
+    --glow-success: 170 45% 70%;
+    --glow-warning: 20 60% 75%;
+    --glow-error: 0 55% 65%;
+    --glow-purple: 280 50% 78%;
+    --glow-cyan: 200 60% 78%;
+    --glow-pink: 340 55% 78%;
   }
 
   .dark {
@@ -69,7 +78,7 @@
     --popover: 0 0% 6%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 43 100% 50%;
+    --primary: 250 60% 75%;
     --primary-foreground: 0 0% 4%;
 
     --secondary: 0 0% 12%;
@@ -78,24 +87,24 @@
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 55%;
 
-    --accent: 43 100% 50%;
+    --accent: 170 45% 70%;
     --accent-foreground: 0 0% 4%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 55% 65%;
     --destructive-foreground: 0 0% 95%;
 
     --border: 0 0% 16%;
     --input: 0 0% 16%;
-    --ring: 43 100% 50%;
+    --ring: 250 60% 75%;
 
     --sidebar-background: 0 0% 3%;
     --sidebar-foreground: 0 0% 60%;
-    --sidebar-primary: 43 100% 50%;
+    --sidebar-primary: 250 60% 75%;
     --sidebar-primary-foreground: 0 0% 4%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 43 100% 50%;
+    --sidebar-ring: 250 60% 75%;
   }
 }
 
@@ -111,7 +120,7 @@
 }
 
 @layer utilities {
-  /* Glassmorphism */
+  /* Glassmorphism - refined */
   .glass {
     @apply bg-card/60 backdrop-blur-2xl border border-border/40;
     background: linear-gradient(
@@ -125,37 +134,68 @@
     @apply bg-card/30 backdrop-blur-xl border border-border/20;
   }
   
-  /* Premium gold glow */
+  /* Pastel glow effects */
+  .glow-primary {
+    box-shadow: 
+      0 0 20px hsl(var(--pastel-lavender) / 0.2),
+      0 0 40px hsl(var(--pastel-lavender) / 0.1);
+  }
+  
+  .glow-primary-subtle {
+    box-shadow: 0 0 15px hsl(var(--pastel-lavender) / 0.15);
+  }
+  
+  /* Legacy gold glow - now uses primary */
   .glow-gold {
     box-shadow: 
-      0 0 20px hsl(var(--glow-gold) / 0.3),
-      0 0 40px hsl(var(--glow-gold) / 0.15),
-      0 0 60px hsl(var(--glow-gold) / 0.05);
+      0 0 20px hsl(var(--pastel-lavender) / 0.2),
+      0 0 40px hsl(var(--pastel-lavender) / 0.1);
   }
   
   .glow-gold-subtle {
-    box-shadow: 0 0 15px hsl(var(--glow-gold) / 0.2);
+    box-shadow: 0 0 15px hsl(var(--pastel-lavender) / 0.15);
   }
   
-  /* Rainbow gradient effects */
+  /* Pastel gradient - soft and refined */
+  .gradient-pastel {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--pastel-lavender)) 0%,
+      hsl(var(--pastel-rose)) 50%,
+      hsl(var(--pastel-sky)) 100%
+    );
+  }
+  
+  .gradient-pastel-text {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--pastel-lavender)) 0%,
+      hsl(var(--pastel-rose)) 50%,
+      hsl(var(--pastel-mint)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Legacy rainbow - now pastel */
   .gradient-rainbow {
     background: linear-gradient(
       135deg,
-      hsl(var(--glow-gold)) 0%,
-      hsl(var(--glow-pink)) 25%,
-      hsl(var(--glow-purple)) 50%,
-      hsl(var(--glow-cyan)) 75%,
-      hsl(var(--glow-gold)) 100%
+      hsl(var(--pastel-lavender)) 0%,
+      hsl(var(--pastel-rose)) 33%,
+      hsl(var(--pastel-sky)) 66%,
+      hsl(var(--pastel-mint)) 100%
     );
   }
   
   .gradient-rainbow-text {
     background: linear-gradient(
       90deg,
-      hsl(var(--glow-gold)) 0%,
-      hsl(var(--glow-pink)) 33%,
-      hsl(var(--glow-purple)) 66%,
-      hsl(var(--glow-cyan)) 100%
+      hsl(var(--pastel-lavender)) 0%,
+      hsl(var(--pastel-rose)) 33%,
+      hsl(var(--pastel-lilac)) 66%,
+      hsl(var(--pastel-sky)) 100%
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -165,9 +205,8 @@
   .gradient-gold {
     background: linear-gradient(
       135deg,
-      hsl(43 100% 50%) 0%,
-      hsl(38 100% 60%) 50%,
-      hsl(43 100% 45%) 100%
+      hsl(var(--pastel-lavender)) 0%,
+      hsl(var(--pastel-lilac)) 100%
     );
   }
   
@@ -180,7 +219,7 @@
     );
   }
   
-  /* Border gradients */
+  /* Border gradients - pastel */
   .border-gradient-rainbow {
     position: relative;
     background: hsl(var(--card));
@@ -195,9 +234,9 @@
     border-radius: inherit;
     background: linear-gradient(
       135deg,
-      hsl(var(--glow-gold) / 0.5) 0%,
-      hsl(var(--glow-purple) / 0.3) 50%,
-      hsl(var(--glow-cyan) / 0.5) 100%
+      hsl(var(--pastel-lavender) / 0.4) 0%,
+      hsl(var(--pastel-rose) / 0.3) 50%,
+      hsl(var(--pastel-sky) / 0.4) 100%
     );
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -206,7 +245,32 @@
     pointer-events: none;
   }
   
-  /* Shimmer animation */
+  .border-pastel {
+    position: relative;
+    background: hsl(var(--card));
+    border: none;
+  }
+  
+  .border-pastel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--pastel-lavender) / 0.5) 0%,
+      hsl(var(--pastel-mint) / 0.3) 50%,
+      hsl(var(--pastel-sky) / 0.5) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  
+  /* Shimmer animation - refined */
   .shimmer {
     position: relative;
     overflow: hidden;
@@ -219,7 +283,7 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      hsl(var(--glow-gold) / 0.1) 50%,
+      hsl(var(--pastel-lavender) / 0.08) 50%,
       transparent 100%
     );
     animation: shimmer 3s infinite;
@@ -230,47 +294,64 @@
     100% { transform: translateX(100%); }
   }
   
-  /* Text glow effects */
+  /* Text glow effects - soft pastel */
   .text-glow-gold {
     text-shadow: 
-      0 0 10px hsl(var(--glow-gold) / 0.5),
-      0 0 30px hsl(var(--glow-gold) / 0.3);
+      0 0 10px hsl(var(--pastel-lavender) / 0.4),
+      0 0 20px hsl(var(--pastel-lavender) / 0.2);
   }
   
   .text-glow-rainbow {
     text-shadow: 
-      0 0 10px hsl(var(--glow-gold) / 0.4),
-      0 0 20px hsl(var(--glow-purple) / 0.3),
-      0 0 30px hsl(var(--glow-cyan) / 0.2);
+      0 0 10px hsl(var(--pastel-lavender) / 0.3),
+      0 0 20px hsl(var(--pastel-rose) / 0.2),
+      0 0 30px hsl(var(--pastel-sky) / 0.15);
   }
   
-  /* Interactive hover states */
+  .text-glow-pastel {
+    text-shadow: 
+      0 0 8px hsl(var(--pastel-lavender) / 0.3),
+      0 0 16px hsl(var(--pastel-lilac) / 0.2);
+  }
+  
+  /* Interactive hover states - refined */
   .hover-rainbow {
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .hover-rainbow:hover {
     box-shadow: 
-      0 0 20px hsl(var(--glow-gold) / 0.3),
-      0 0 40px hsl(var(--glow-purple) / 0.2),
-      0 0 60px hsl(var(--glow-cyan) / 0.1);
+      0 0 15px hsl(var(--pastel-lavender) / 0.2),
+      0 0 30px hsl(var(--pastel-rose) / 0.12),
+      0 0 45px hsl(var(--pastel-sky) / 0.08);
   }
   
   .hover-gold {
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .hover-gold:hover {
-    box-shadow: 0 0 25px hsl(var(--glow-gold) / 0.4);
-    border-color: hsl(var(--glow-gold) / 0.5);
+    box-shadow: 0 0 20px hsl(var(--pastel-lavender) / 0.25);
+    border-color: hsl(var(--pastel-lavender) / 0.4);
+  }
+  
+  .hover-pastel {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-pastel:hover {
+    box-shadow: 
+      0 0 12px hsl(var(--pastel-lavender) / 0.15),
+      0 0 24px hsl(var(--pastel-mint) / 0.1);
+    border-color: hsl(var(--pastel-lavender) / 0.3);
   }
   
   /* Success states */
   .glow-success {
-    box-shadow: 0 0 15px hsl(var(--glow-success) / 0.4);
+    box-shadow: 0 0 15px hsl(var(--pastel-mint) / 0.3);
   }
   
-  /* Premium card effect */
+  /* Premium card effect - Apple-inspired */
   .card-premium {
     background: linear-gradient(
       145deg,
@@ -282,15 +363,15 @@
   }
   
   .card-premium:hover {
-    border-color: hsl(var(--glow-gold) / 0.4);
+    border-color: hsl(var(--pastel-lavender) / 0.3);
     box-shadow: 
-      0 4px 30px hsl(0 0% 0% / 0.5),
-      0 0 20px hsl(var(--glow-gold) / 0.15),
-      inset 0 1px 0 hsl(0 0% 20% / 0.3);
-    transform: translateY(-2px);
+      0 4px 24px hsl(0 0% 0% / 0.4),
+      0 0 16px hsl(var(--pastel-lavender) / 0.1),
+      inset 0 1px 0 hsl(0 0% 18% / 0.3);
+    transform: translateY(-1px);
   }
   
-  /* Animated gradient border */
+  /* Animated gradient border - pastel */
   .border-animated {
     position: relative;
     background: hsl(var(--card));
@@ -304,17 +385,18 @@
     border-radius: inherit;
     background: linear-gradient(
       var(--gradient-angle, 0deg),
-      hsl(var(--glow-gold)) 0%,
-      hsl(var(--glow-purple)) 33%,
-      hsl(var(--glow-cyan)) 66%,
-      hsl(var(--glow-gold)) 100%
+      hsl(var(--pastel-lavender)) 0%,
+      hsl(var(--pastel-rose)) 33%,
+      hsl(var(--pastel-sky)) 66%,
+      hsl(var(--pastel-lavender)) 100%
     );
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
-    animation: rotate-gradient 4s linear infinite;
+    animation: rotate-gradient 6s linear infinite;
+    opacity: 0.6;
   }
   
   @keyframes rotate-gradient {
