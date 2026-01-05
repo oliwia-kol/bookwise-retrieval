@@ -78,7 +78,7 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
     logging.warning("Validation error: %s", exc)
-    return _error_response("Validation error", "VALIDATION_ERROR", 422)
+    return _error_response("Validation error", "VALIDATION_ERROR", 400)
 
 
 @app.exception_handler(Exception)
@@ -187,6 +187,14 @@ class SearchRequest(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: list[dict] = []
+
+    @field_validator("message")
+    @classmethod
+    def validate_message(cls, value: str) -> str:
+        cleaned = (value or "").strip()
+        if not cleaned:
+            raise ValueError("Message cannot be empty")
+        return cleaned
 
 
 def _format_hit(hit: dict, idx: int) -> dict:

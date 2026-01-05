@@ -1,21 +1,23 @@
-name: tests
+name: Tests
 
-on:
-  push:
-    branches: ["**"]
-  pull_request:
+on: [push, pull_request]
 
 jobs:
-  pytest:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m venv .venv
+          source .venv/bin/activate
           pip install -r requirements.txt
-      - name: Run pytest
-        run: pytest tests/ -v
+          pip install pytest pytest-asyncio httpx
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          pytest tests/ -v
