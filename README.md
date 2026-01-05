@@ -31,6 +31,7 @@ npm install
 # Create .env with your backend URL
 cp .env.example .env
 # Edit .env and set VITE_API_URL to your backend URL
+# Optionally set VITE_USE_MOCKS=true to use mock data
 
 # Run React dev server
 npm run dev
@@ -40,7 +41,8 @@ npm run dev
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `VITE_API_URL` | FastAPI backend URL | `http://localhost:8000` or Codespaces URL |
+| `VITE_API_URL` | FastAPI backend URL (required) | `http://localhost:8000` or Codespaces URL |
+| `VITE_USE_MOCKS` | Use mock data instead of API | `true` |
 | `OMP_NUM_THREADS` | Limit CPU threads | `2` |
 | `MKL_NUM_THREADS` | Limit BLAS threads | `2` |
 

@@ -17,6 +17,7 @@ export function AppHeader({
   onToggleTheme
 }: AppHeaderProps) {
   const { data: health, isLoading } = useHealth();
+  const isReady = Boolean(health?.ready);
 
   return (
     <header className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 bg-background/50 backdrop-blur-xl border-b border-border/10 relative z-20">
@@ -54,15 +55,15 @@ export function AppHeader({
           <span className={cn(
             "relative h-2 w-2 rounded-full",
             isLoading && "bg-muted-foreground animate-pulse",
-            !isLoading && health?.ok && "bg-[hsl(var(--color-green))]",
-            !isLoading && !health?.ok && "bg-destructive"
+            !isLoading && isReady && "bg-[hsl(var(--color-green))]",
+            !isLoading && !isReady && "bg-destructive"
           )}>
-            {!isLoading && health?.ok && (
+            {!isLoading && isReady && (
               <span className="absolute inset-0 rounded-full bg-[hsl(var(--color-green))] animate-status-pulse" />
             )}
           </span>
           <span className="hidden sm:inline text-muted-foreground">
-            {isLoading ? 'Connecting' : health?.ok ? 'Ready' : 'Offline'}
+            {isLoading ? 'Connecting' : isReady ? 'Ready' : 'Offline'}
           </span>
         </div>
 
