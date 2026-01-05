@@ -62,14 +62,19 @@ export function EvidenceCard({
       style={{ animationDelay: `${animationDelay}ms` }}
       onClick={onSelect}
     >
-      {/* Delicate rainbow glow border on hover */}
-      <div className={cn(
-        "absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none",
-        "border border-transparent",
-        "bg-gradient-to-r from-[hsl(var(--glow-pink)/0.2)] via-[hsl(var(--glow-purple)/0.2)] to-[hsl(var(--glow-cyan)/0.2)]",
-        "shadow-[0_0_15px_hsl(var(--glow-pink)/0.1),0_0_30px_hsl(var(--glow-purple)/0.08),0_0_45px_hsl(var(--glow-cyan)/0.06)]",
-        "[mask:linear-gradient(#fff_0_0)_content-box,linear-gradient(#fff_0_0)] [mask-composite:exclude] p-[1px]"
-      )} />
+      {/* Delicate pastel rainbow border on hover */}
+      <div 
+        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, hsl(330 70% 80% / 0.6), hsl(270 70% 80% / 0.6), hsl(200 70% 80% / 0.6))',
+          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          maskComposite: 'exclude',
+          padding: '1px',
+          boxShadow: '0 0 15px hsl(330 70% 80% / 0.12), 0 0 30px hsl(270 70% 80% / 0.08), 0 0 45px hsl(200 70% 80% / 0.06)'
+        }}
+      />
 
       {/* Top row: Publisher + Title + Actions */}
       <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
