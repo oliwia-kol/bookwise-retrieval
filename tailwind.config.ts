@@ -107,15 +107,15 @@ export default {
         },
         "glow-pulse": {
           "0%, 100%": { 
-            boxShadow: "0 0 20px hsl(175 85% 45% / 0.2), 0 0 40px hsl(175 85% 45% / 0.1)" 
+            boxShadow: "0 0 20px hsl(24 95% 53% / 0.25), 0 0 40px hsl(24 95% 53% / 0.15)" 
           },
           "50%": { 
-            boxShadow: "0 0 30px hsl(175 85% 45% / 0.4), 0 0 60px hsl(175 85% 45% / 0.2)" 
+            boxShadow: "0 0 35px hsl(24 95% 53% / 0.4), 0 0 60px hsl(24 95% 53% / 0.25)" 
           },
         },
         "gentle-float": {
           "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-4px)" },
+          "50%": { transform: "translateY(-6px)" },
         },
         "mesh-breathe": {
           "0%, 100%": { 
@@ -123,8 +123,8 @@ export default {
             transform: "scale(1)",
           },
           "50%": { 
-            opacity: "0.8",
-            transform: "scale(1.05)",
+            opacity: "0.85",
+            transform: "scale(1.08)",
           },
         },
       },
@@ -140,8 +140,8 @@ export default {
         "slide-in-up": "slide-in-up 0.4s ease-out",
         "shimmer-sweep": "shimmer-sweep 2s linear infinite",
         "glow-pulse": "glow-pulse 2.5s ease-in-out infinite",
-        "gentle-float": "gentle-float 3s ease-in-out infinite",
-        "mesh-breathe": "mesh-breathe 8s ease-in-out infinite",
+        "gentle-float": "gentle-float 4s ease-in-out infinite",
+        "mesh-breathe": "mesh-breathe 6s ease-in-out infinite",
       },
     },
   },

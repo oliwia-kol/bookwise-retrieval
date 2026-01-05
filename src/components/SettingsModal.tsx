@@ -1,4 +1,4 @@
-import { Settings, X } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -29,9 +29,9 @@ interface SettingsModalProps {
 }
 
 const PUBLISHERS: { id: Publisher; label: string; color: string }[] = [
-  { id: 'OReilly', label: "O'Reilly", color: 'bg-[hsl(175_85%_45%)]' },
-  { id: 'Manning', label: 'Manning', color: 'bg-[hsl(335_85%_60%)]' },
-  { id: 'Pearson', label: 'Pearson', color: 'bg-[hsl(215_90%_60%)]' },
+  { id: 'OReilly', label: "O'Reilly", color: 'bg-[hsl(24_95%_53%)]' },
+  { id: 'Manning', label: 'Manning', color: 'bg-[hsl(350_89%_60%)]' },
+  { id: 'Pearson', label: 'Pearson', color: 'bg-[hsl(262_83%_58%)]' },
 ];
 
 export function SettingsModal({ 
@@ -60,7 +60,9 @@ export function SettingsModal({
       <DialogContent className="sm:max-w-md glass-card border-border/20">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <Settings className="h-5 w-5 text-primary" />
+            <div className="h-8 w-8 rounded-lg gradient-warm flex items-center justify-center">
+              <Settings className="h-4 w-4 text-white" />
+            </div>
             Search Settings
           </DialogTitle>
         </DialogHeader>
@@ -166,7 +168,7 @@ export function SettingsModal({
 
           {/* Near-Miss Toggle */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border/20">
-            <Label className="text-sm">Show near-miss results</Label>
+            <Label className="text-sm">Show related results</Label>
             <Switch
               checked={filters.show_near_miss}
               onCheckedChange={(v) => updateFilter('show_near_miss', v)}

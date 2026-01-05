@@ -1,20 +1,18 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { Sparkles, BookOpen, Zap, Shield } from 'lucide-react';
 import { AppHeader } from './AppHeader';
-import { SearchBar } from './SearchBar';
-import { EvidenceList } from './EvidenceList';
-import { ContextPanel } from './ContextPanel';
-import { StatusStrip } from './StatusStrip';
+import { ChatMessage } from './chat/ChatMessage';
+import { ChatInput } from './chat/ChatInput';
 import { SettingsModal } from './SettingsModal';
-import { FollowUpInput } from './FollowUpInput';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { LivingBackground } from './effects/LivingBackground';
 import { CursorSpotlight } from './effects/CursorSpotlight';
 import { useSearch, useHealth } from '@/hooks/useSearch';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
-import type { SearchFilters, EvidenceHit, Publisher } from '@/lib/types';
+import type { SearchFilters, ChatMessage as ChatMessageType, Publisher } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Drawer, DrawerContent } from '@/components/ui/drawer';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const DEFAULT_FILTERS: SearchFilters = {
   pubs: [],
@@ -25,130 +23,199 @@ const DEFAULT_FILTERS: SearchFilters = {
   show_near_miss: true,
 };
 
+const FEATURE_CHIPS = [
+  { icon: Sparkles, label: 'AI-Powered', color: 'text-[hsl(var(--color-orange))]' },
+  { icon: BookOpen, label: '3 Publishers', color: 'text-[hsl(var(--color-violet))]' },
+  { icon: Zap, label: 'Instant', color: 'text-[hsl(var(--color-yellow))]' },
+  { icon: Shield, label: 'Verified', color: 'text-[hsl(var(--color-green))]' },
+];
+
 export function AppLayout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [contextOpen, setContextOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const [submittedQuery, setSubmittedQuery] = useState('');
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
-  const [selectedHit, setSelectedHit] = useState<EvidenceHit | null>(null);
-  const [recentQueries, setRecentQueries] = useState<string[]>([]);
+  const [messages, setMessages] = useState<ChatMessageType[]>([]);
+  const [currentQuery, setCurrentQuery] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { isDark, toggleTheme } = useTheme();
   const { data: health } = useHealth();
-  const { data: searchResult, isLoading } = useSearch(submittedQuery, filters);
+  const { data: searchResult, isLoading } = useSearch(currentQuery, filters);
 
   const availablePublishers: Publisher[] = health?.publishers || ['OReilly', 'Manning', 'Pearson'];
 
-  const handleSubmit = useCallback(() => {
-    if (!query.trim()) return;
-    setSubmittedQuery(query.trim());
-    setRecentQueries(prev => {
-      const filtered = prev.filter(q => q !== query.trim());
-      return [query.trim(), ...filtered].slice(0, 10);
-    });
-  }, [query]);
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-  const handleFollowUp = useCallback((followUpQuery: string) => {
-    setQuery(followUpQuery);
-    setSubmittedQuery(followUpQuery);
-    setRecentQueries(prev => {
-      const filtered = prev.filter(q => q !== followUpQuery);
-      return [followUpQuery, ...filtered].slice(0, 10);
-    });
+  // Handle search result
+  useEffect(() => {
+    if (searchResult && currentQuery) {
+      // Remove loading message and add assistant response
+      setMessages(prev => {
+        const withoutLoading = prev.filter(m => !m.isLoading);
+        
+        // Create response based on results
+        const responseContent = searchResult.hits.length > 0
+          ? `I found ${searchResult.hits.length} relevant sources for your query. Here are the key findings:\n\n${searchResult.hits.slice(0, 3).map((hit, i) => 
+              `**${i + 1}. ${hit.title}** (${hit.publisher})\n${hit.snippet}`
+            ).join('\n\n')}`
+          : "I couldn't find any relevant sources for your query. Try rephrasing or asking about a different topic.";
+
+        return [...withoutLoading, {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: responseContent,
+          evidence: searchResult.hits,
+          timestamp: new Date(),
+        }];
+      });
+      setCurrentQuery('');
+    }
+  }, [searchResult, currentQuery]);
+
+  const handleSubmit = useCallback((message: string) => {
+    // Add user message
+    const userMessage: ChatMessageType = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: message,
+      timestamp: new Date(),
+    };
+    
+    // Add loading message
+    const loadingMessage: ChatMessageType = {
+      id: `loading-${Date.now()}`,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      isLoading: true,
+    };
+
+    setMessages(prev => [...prev, userMessage, loadingMessage]);
+    setCurrentQuery(message);
   }, []);
 
-  const handleSelectHit = useCallback((hit: EvidenceHit) => {
-    setSelectedHit(hit);
-    setContextOpen(true);
+  const handleNewChat = useCallback(() => {
+    setMessages([]);
+    setCurrentQuery('');
   }, []);
 
   // Keyboard shortcuts
   const { showShortcuts, setShowShortcuts } = useKeyboardShortcuts({
     hits: searchResult?.hits || [],
-    selectedHit,
-    onSelectHit: handleSelectHit,
+    selectedHit: null,
+    onSelectHit: () => {},
     onPinHit: () => {},
-    onClearSelection: () => setSelectedHit(null),
+    onClearSelection: () => {},
   });
 
-  const hasResults = searchResult && searchResult.hits.length > 0;
+  const hasMessages = messages.length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
+    <div className="h-screen flex flex-col bg-background relative overflow-hidden">
       {/* Living Background */}
-      <LivingBackground isSearching={isLoading} />
+      <LivingBackground isActive={isLoading || hasMessages} />
       
       {/* Cursor Spotlight Effect */}
       <CursorSpotlight intensity="subtle" />
       
       {/* Main content */}
-      <div className="relative z-10 flex-1 flex flex-col">
+      <div className="relative z-10 flex-1 flex flex-col min-h-0">
         <AppHeader 
-          onOpenSettings={() => setSettingsOpen(true)} 
+          onOpenSettings={() => setSettingsOpen(true)}
+          onNewChat={hasMessages ? handleNewChat : undefined}
           isDark={isDark}
           onToggleTheme={toggleTheme}
         />
 
-        <main className="flex-1 flex flex-col px-4 sm:px-8 py-8">
-          {/* Hero section with search */}
-          <div className={cn(
-            "flex flex-col items-center justify-center transition-all duration-500",
-            hasResults ? "pt-4 pb-6" : "flex-1 pb-24"
-          )}>
-            {/* Title - only show when no results */}
-            {!hasResults && (
-              <div className="text-center mb-8 animate-fade-in">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 gradient-rainbow-text">
-                  Ask your library anything
-                </h2>
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  Search across O'Reilly, Manning, and Pearson books
+        {/* Chat area */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {!hasMessages ? (
+            /* Empty state - Hero */
+            <div className="flex-1 flex flex-col items-center justify-center px-4 pb-32">
+              <div className="text-center mb-10 animate-fade-in">
+                {/* Animated logo */}
+                <div className="relative h-20 w-20 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-2xl gradient-sunset opacity-20 blur-xl animate-breathe" />
+                  <div className="relative h-full w-full rounded-2xl gradient-warm flex items-center justify-center glow-primary">
+                    <Sparkles className="h-9 w-9 text-white" />
+                  </div>
+                </div>
+
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 gradient-sunset-text">
+                  Ask your library
+                </h1>
+                <p className="text-muted-foreground text-base sm:text-lg max-w-md mx-auto">
+                  Get instant answers from O'Reilly, Manning, and Pearson technical books
                 </p>
               </div>
-            )}
 
-            <SearchBar
-              value={query}
-              onChange={setQuery}
-              onSubmit={handleSubmit}
-              isLoading={isLoading}
-              recentQueries={recentQueries}
-            />
+              {/* Feature chips */}
+              <div className="flex flex-wrap justify-center gap-3 mb-10 animate-fade-in" style={{ animationDelay: '100ms' }}>
+                {FEATURE_CHIPS.map((chip, i) => (
+                  <div
+                    key={chip.label}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-full glass-subtle",
+                      "animate-gentle-float"
+                    )}
+                    style={{ animationDelay: `${i * 200}ms` }}
+                  >
+                    <chip.icon className={cn("h-4 w-4", chip.color)} />
+                    <span className="text-sm text-foreground/80">{chip.label}</span>
+                  </div>
+                ))}
+              </div>
 
-            {/* Status strip */}
-            <div className="mt-4">
-              <StatusStrip
-                meta={searchResult?.meta || null}
-                hitCount={searchResult?.hits.length || 0}
-                isLoading={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Results */}
-          {hasResults && (
-            <div className="flex-1 max-w-4xl mx-auto w-full">
-              <EvidenceList
-                hits={searchResult.hits}
-                nearMiss={searchResult.near_miss}
-                isLoading={isLoading}
-                selectedId={selectedHit?.id}
-                onSelect={handleSelectHit}
-                pinnedIds={new Set()}
-                onPin={() => {}}
-              />
-              
-              {/* Follow-up input */}
-              <div className="mt-8 pb-8">
-                <FollowUpInput 
-                  onSubmit={handleFollowUp}
-                  isLoading={isLoading}
-                />
+              {/* Suggested queries */}
+              <div className="flex flex-wrap justify-center gap-2 max-w-2xl animate-fade-in" style={{ animationDelay: '200ms' }}>
+                {[
+                  'What are React best practices?',
+                  'Explain microservices architecture',
+                  'How does Docker networking work?',
+                ].map((query) => (
+                  <button
+                    key={query}
+                    onClick={() => handleSubmit(query)}
+                    className={cn(
+                      "px-4 py-2 rounded-xl text-sm",
+                      "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
+                      "transition-all duration-300 hover:scale-[1.02]"
+                    )}
+                  >
+                    {query}
+                  </button>
+                ))}
               </div>
             </div>
+          ) : (
+            /* Chat messages */
+            <ScrollArea className="flex-1">
+              <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+                {messages.map((message) => (
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                  />
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
           )}
-        </main>
+
+          {/* Input area */}
+          <div className={cn(
+            "py-4 border-t border-border/10 bg-background/50 backdrop-blur-xl",
+            !hasMessages && "absolute bottom-0 left-0 right-0 border-t-0 bg-transparent"
+          )}>
+            <ChatInput
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              placeholder={hasMessages ? "Ask a follow-up..." : "Ask about your technical library..."}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Settings Modal */}
@@ -159,21 +226,6 @@ export function AppLayout() {
         onFiltersChange={setFilters}
         availablePublishers={availablePublishers}
       />
-
-      {/* Mobile Context Drawer */}
-      <Drawer open={contextOpen && !!selectedHit} onOpenChange={(open) => { if (!open) setContextOpen(false); }}>
-        <DrawerContent className="max-h-[85vh] bg-background/95 backdrop-blur-xl border-border/20">
-          <div className="overflow-y-auto">
-            <ContextPanel
-              hit={selectedHit}
-              onClose={() => {
-                setSelectedHit(null);
-                setContextOpen(false);
-              }}
-            />
-          </div>
-        </DrawerContent>
-      </Drawer>
 
       {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal 
