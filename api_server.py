@@ -244,17 +244,24 @@ async def health():
             "corpus_count": 0,
             "publishers": [],
             "engine_version": "unavailable",
-            "error": "RAG engine not loaded"
+            "engine_available": False,
+            "corpora_ok": False,
+            "ready": False,
+            "error": "RAG engine not loaded",
         }
     
     report = rag.get_startup_report(ENGINE)
-    publishers = [p for p, ready in report.items() if ready]
+    publishers = list(report.get("ok", []))
+    corpora_ok = len(publishers) > 0
     
     return {
         "ok": True,
         "corpus_count": len(publishers),
         "publishers": publishers,
         "engine_version": "1.0.0",
+        "engine_available": True,
+        "corpora_ok": corpora_ok,
+        "ready": corpora_ok,
     }
 
 
