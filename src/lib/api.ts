@@ -1,6 +1,11 @@
 import type { SearchFilters, SearchResponse, HealthResponse, EvidenceHit, Publisher } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = (() => {
+  const configured = import.meta.env.VITE_API_URL || '';
+  if (configured) return configured;
+  if (import.meta.env.DEV) return 'http://localhost:8000';
+  return '';
+})();
 const USE_MOCK = import.meta.env.VITE_USE_MOCKS === 'true';
 
 // Topic-based mock data for contextual responses

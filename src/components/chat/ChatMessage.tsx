@@ -163,6 +163,11 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
               </div>
             </div>
           )}
+          {!isUser && sourceCount === 0 && (
+            <div className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground/60">
+              No sources available for this reply.
+            </div>
+          )}
         </div>
       </div>
 

@@ -46,7 +46,7 @@ export function SearchBar({
       {/* Main search container */}
       <div 
         className={cn(
-          "relative flex items-center rounded-2xl transition-all duration-500",
+          "relative flex items-center rounded-full transition-all duration-500 overflow-hidden searchbar-animate",
           "glass-card",
           isFocused && "ring-2 ring-primary/40 glow-primary-subtle"
         )}
@@ -57,7 +57,7 @@ export function SearchBar({
         {/* Animated rainbow border on focus */}
         {isFocused && (
           <div 
-            className="absolute inset-0 rounded-2xl pointer-events-none border-animated"
+            className="absolute inset-0 rounded-full pointer-events-none border-animated"
             style={{
               opacity: 0.6,
             }}
@@ -92,7 +92,7 @@ export function SearchBar({
           }}
           placeholder="Ask anything about your library..."
           className={cn(
-            "pl-14 pr-40 h-16 text-base sm:text-lg rounded-2xl",
+            "pl-14 pr-40 h-16 text-base sm:text-lg rounded-full",
             "bg-transparent border-none",
             "placeholder:text-muted-foreground/40",
             "focus-visible:ring-0 focus-visible:ring-offset-0",

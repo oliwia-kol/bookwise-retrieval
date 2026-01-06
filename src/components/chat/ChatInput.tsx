@@ -49,7 +49,7 @@ export function ChatInput({
     <div className="w-full max-w-3xl mx-auto px-3 sm:px-4">
       <div 
         className={cn(
-          "relative flex items-end gap-2 sm:gap-3 p-3 sm:p-4",
+          "relative flex items-end gap-2 sm:gap-3 p-3 sm:p-4 overflow-hidden searchbar-animate rounded-full",
           "surface-elevated surface-interactive",
           isFocused && "glow-primary-subtle border-animated"
         )}
