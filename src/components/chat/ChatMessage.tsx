@@ -54,24 +54,24 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
 
   return (
     <>
-      <div className={cn("flex gap-4 animate-slide-up-fade", isUser && "flex-row-reverse")}>
+      <div className={cn("flex gap-3 sm:gap-4 animate-slide-up-fade", isUser && "flex-row-reverse")}>
         {/* Avatar */}
         <div className={cn(
-          "h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
+          "h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shrink-0",
           isUser 
             ? "bg-secondary border border-border/50" 
             : "gradient-warm glow-primary-subtle"
         )}>
           {isUser ? (
-            <User className="h-4 w-4 text-foreground/70" />
+            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-foreground/70" />
           ) : (
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-foreground" />
           )}
         </div>
 
         {/* Content */}
         <div className={cn("flex-1", isUser && "flex flex-col items-end")}>
-          <div className="w-full max-w-[560px]">
+          <div className="w-full sm:max-w-[560px]">
             <div
               className={cn(
                 "rounded-[26px] p-[1px] shadow-[0_14px_36px_rgba(0,0,0,0.18)]",
@@ -82,14 +82,14 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
             >
               <div
                 className={cn(
-                  "rounded-[25px] px-4 py-3 group relative backdrop-blur-sm",
+                  "rounded-[25px] px-3 py-2.5 sm:px-4 sm:py-3 group relative backdrop-blur-sm",
                   isUser ? "chat-message-user" : "chat-message-assistant"
                 )}
               >
                 {/* Render assistant content with preserved line breaks */}
                 <div
                   className={cn(
-                    "space-y-3 text-body whitespace-pre-wrap leading-relaxed",
+                    "space-y-3 text-sm sm:text-body whitespace-pre-wrap leading-relaxed",
                     isUser ? "text-foreground" : "text-foreground"
                   )}
                 >
@@ -124,7 +124,7 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
 
           <div
             className={cn(
-              "mt-2 flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground/70",
+              "mt-1.5 sm:mt-2 flex items-center gap-2 text-[10px] sm:text-[11px] uppercase tracking-wide text-muted-foreground/70",
               isUser && "justify-end"
             )}
           >
