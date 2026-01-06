@@ -30,7 +30,7 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md glass border-border/30">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-foreground">
+          <DialogTitle className="flex items-center gap-2 text-title text-foreground">
             <Keyboard className="h-5 w-5 text-primary" />
             Keyboard Shortcuts
           </DialogTitle>
@@ -39,7 +39,7 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
         <div className="space-y-6 py-4">
           {SHORTCUTS.map(({ category, items }) => (
             <div key={category}>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+              <h3 className="text-caption text-muted-foreground uppercase tracking-wider mb-3">
                 {category}
               </h3>
               <div className="space-y-2">
@@ -48,8 +48,8 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
                     key={key} 
                     className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
                   >
-                    <span className="text-sm text-foreground/80">{description}</span>
-                    <kbd className="px-2 py-1 text-xs font-mono rounded bg-background border border-border/50 text-primary">
+                    <span className="text-body text-foreground/80">{description}</span>
+                    <kbd className="px-2 py-1 text-caption font-mono rounded bg-background border border-border/50 text-primary">
                       {key}
                     </kbd>
                   </div>

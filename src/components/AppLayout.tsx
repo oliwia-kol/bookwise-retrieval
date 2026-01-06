@@ -155,11 +155,14 @@ export function AppLayout() {
                   </div>
 
                   <div className="space-y-4">
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold gradient-sunset-text">
+                    <h1 className="text-display gradient-sunset-text">
                       Ask your library
                     </h1>
-                    <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
+                    <p className="text-title text-muted-foreground max-w-xl mx-auto">
                       Get instant answers from O'Reilly, Manning, and Pearson technical books
+                    </p>
+                    <p className="text-body text-muted-foreground/80 max-w-xl mx-auto">
+                      Trusted summaries, citations, and highlights from the sources you already rely on.
                     </p>
                   </div>
                 </div>
@@ -176,7 +179,7 @@ export function AppLayout() {
                       style={{ animationDelay: `${i * 200}ms` }}
                     >
                       <chip.icon className={cn("h-4 w-4", chip.color)} />
-                      <span className="text-sm text-foreground/80">{chip.label}</span>
+                      <span className="text-caption text-foreground/80">{chip.label}</span>
                     </div>
                   ))}
                 </div>
@@ -193,7 +196,7 @@ export function AppLayout() {
                       onClick={() => handleSubmit(query)}
                       disabled={!isReady}
                       className={cn(
-                        "px-4 py-2 rounded-xl text-sm",
+                        "px-4 py-2 rounded-xl text-caption",
                         "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
                         "transition-all duration-300 hover:scale-[1.02]",
                         !isReady && "cursor-not-allowed opacity-50 hover:scale-100"

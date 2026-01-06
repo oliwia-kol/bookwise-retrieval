@@ -71,11 +71,11 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
           )}>
             {/* Render assistant content with preserved line breaks */}
             {isUser ? (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              <p className="text-body whitespace-pre-wrap">
                 {message.content}
               </p>
             ) : (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+              <p className="text-body whitespace-pre-wrap text-foreground">
                 {message.content}
               </p>
             )}
@@ -103,7 +103,7 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
           {/* Sources */}
           {message.evidence && message.evidence.length > 0 && (
             <div className="mt-3 space-y-2">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+              <p className="text-caption text-muted-foreground uppercase tracking-wider mb-2">
                 Sources
               </p>
               <div className="flex flex-wrap gap-2">
@@ -125,24 +125,24 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
       <Dialog open={!!selectedSource} onOpenChange={(open) => !open && setSelectedSource(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] glass-card border-primary/20">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-foreground">
+            <DialogTitle className="text-title text-foreground">
               {selectedSource?.title}
             </DialogTitle>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-caption text-muted-foreground">
               {selectedSource?.publisher} · {selectedSource?.section}
             </p>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-4">
               <div className="p-4 rounded-lg bg-secondary/50 border border-border/30">
-                <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                <p className="text-body text-foreground whitespace-pre-wrap">
                   {selectedSource?.snippet}
                 </p>
               </div>
               {selectedSource?.full_text && (
                 <div className="p-4 rounded-lg bg-background/50 border border-border/20">
-                  <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Full Context</h4>
-                  <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                  <h4 className="text-caption uppercase tracking-wider text-muted-foreground mb-2">Full Context</h4>
+                  <p className="text-body text-foreground/90 whitespace-pre-wrap">
                     {selectedSource.full_text}
                   </p>
                 </div>

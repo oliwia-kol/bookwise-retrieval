@@ -27,7 +27,7 @@ export function AppHeader({
           <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12" />
         </div>
         <div>
-          <h1 className="font-semibold text-base sm:text-lg tracking-tight gradient-sunset-text">
+          <h1 className="text-title tracking-tight gradient-sunset-text">
             RAG Books
           </h1>
         </div>
@@ -40,7 +40,7 @@ export function AppHeader({
             variant="outline"
             size="sm"
             onClick={onNewChat}
-            className="h-8 px-3 text-xs border-border/30 hover:border-primary/50 hover:bg-primary/5 gap-1.5"
+            className="h-8 px-3 text-caption border-border/30 hover:border-primary/50 hover:bg-primary/5 gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">New Chat</span>
@@ -62,7 +62,7 @@ export function AppHeader({
               <span className="absolute inset-0 rounded-full bg-[hsl(var(--color-green))] animate-status-pulse" />
             )}
           </span>
-          <span className="hidden sm:inline text-muted-foreground">
+          <span className="hidden sm:inline text-caption text-muted-foreground">
             {isLoading ? 'Connecting' : isReady ? 'Ready' : 'Offline'}
           </span>
         </div>
