@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Sparkles, BookOpen, Zap, Shield, Library, CheckCircle2 } from 'lucide-react';
+import { Sparkles, BookOpen, Zap, Library, CheckCircle2 } from 'lucide-react';
 import { AppHeader } from './AppHeader';
 import { ChatMessage } from './chat/ChatMessage';
 import { ChatInput } from './chat/ChatInput';
@@ -7,6 +7,7 @@ import { SettingsModal } from './SettingsModal';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { LivingBackground } from './effects/LivingBackground';
 import { CursorSpotlight } from './effects/CursorSpotlight';
+import { Button } from '@/components/ui/button';
 import { useSearch, useHealth } from '@/hooks/useSearch';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
@@ -28,6 +29,12 @@ const FEATURE_CHIPS = [
   { icon: Library, label: '3 Publishers', color: 'text-brand-coral' },
   { icon: Zap, label: 'Instant', color: 'text-brand-cyan' },
   { icon: CheckCircle2, label: 'Verified', color: 'text-brand-sage' },
+];
+
+const SUGGESTED_QUERIES = [
+  'What are React best practices?',
+  'Explain microservices architecture',
+  'How does Docker networking work?',
 ];
 
 export function AppLayout() {
@@ -125,10 +132,10 @@ export function AppLayout() {
   return (
     <div className="h-screen flex flex-col bg-background relative overflow-hidden">
       {/* Living Background */}
-      <LivingBackground isActive={isLoading || hasMessages} />
+      <LivingBackground isActive={isLoading || hasMessages} className="opacity-90" />
       
       {/* Cursor Spotlight Effect */}
-      <CursorSpotlight intensity="subtle" />
+      <CursorSpotlight intensity="subtle" size={320} className="opacity-70" />
       
       {/* Main content */}
       <div className="relative z-10 flex-1 flex flex-col min-h-0">
@@ -144,67 +151,88 @@ export function AppLayout() {
           {!hasMessages ? (
             /* Empty state - Hero */
             <div className="flex-1 flex flex-col items-center justify-center">
-              <div className={cn("w-full flex flex-col items-center space-y-12", layoutContainer)}>
-                <div className="flex flex-col items-center text-center animate-fade-in space-y-12">
-                  {/* Animated logo */}
-                  <div className="relative h-20 w-20 mx-auto">
-                    <div className="absolute inset-0 rounded-2xl gradient-sunset opacity-20 blur-xl animate-breathe" />
-                    <div className="relative h-full w-full rounded-2xl gradient-warm flex items-center justify-center glow-primary">
-                      <Sparkles className="h-9 w-9 text-white" />
+              <div className={cn("w-full flex flex-col items-center", layoutContainer)}>
+                <div className="w-full max-w-4xl animate-fade-in">
+                  <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-background/70 px-6 py-12 text-center shadow-[0_30px_80px_rgba(12,10,24,0.35)] backdrop-blur-2xl sm:px-12 sm:py-16">
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent" />
+                    <div className="relative flex flex-col items-center gap-10">
+                      {/* Animated logo */}
+                      <div className="relative h-20 w-20 mx-auto">
+                        <div className="absolute inset-0 rounded-2xl gradient-sunset opacity-25 blur-2xl animate-breathe" />
+                        <div className="relative h-full w-full rounded-2xl gradient-warm flex items-center justify-center glow-primary">
+                          <Sparkles className="h-9 w-9 text-white" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-5">
+                        <h1 className="text-display gradient-sunset-text">
+                          Ask your library
+                        </h1>
+                        <p className="text-title text-muted-foreground max-w-2xl mx-auto">
+                          Get instant answers from O'Reilly, Manning, and Pearson technical books
+                        </p>
+                        <p className="text-body text-muted-foreground/80 max-w-2xl mx-auto">
+                          Trusted summaries, citations, and highlights from the sources you already rely on.
+                        </p>
+                      </div>
+
+                      {/* Feature chips */}
+                      <div className="flex flex-wrap justify-center gap-3">
+                        {FEATURE_CHIPS.map((chip, i) => (
+                          <div
+                            key={chip.label}
+                            className={cn(
+                              "flex items-center gap-3 rounded-full border border-white/10",
+                              "bg-background/60 px-4 py-2.5 min-w-[150px] justify-center",
+                              "shadow-[0_10px_25px_rgba(12,10,24,0.15)]",
+                              "animate-gentle-float"
+                            )}
+                            style={{ animationDelay: `${i * 200}ms` }}
+                          >
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary/80 border border-white/10">
+                              <chip.icon className={cn("h-4 w-4", chip.color)} />
+                            </div>
+                            <span className="text-caption text-foreground/80">{chip.label}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Action row */}
+                      <div className="flex flex-col items-center gap-4">
+                        <Button
+                          onClick={() => handleSubmit(SUGGESTED_QUERIES[0])}
+                          disabled={!isReady}
+                          className={cn(
+                            "gap-2 rounded-full px-6 py-3 text-sm",
+                            "btn-primary-vibrant shadow-lg shadow-primary/30",
+                            "hover:-translate-y-0.5 hover:shadow-xl",
+                            "disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
+                          )}
+                        >
+                          <BookOpen className="h-4 w-4" />
+                          Try a suggested query
+                        </Button>
+
+                        <div className="flex flex-wrap justify-center gap-3">
+                          {SUGGESTED_QUERIES.map((query) => (
+                            <button
+                              key={query}
+                              onClick={() => handleSubmit(query)}
+                              disabled={!isReady}
+                              className={cn(
+                                "px-4 py-2 rounded-xl text-caption",
+                                "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
+                                "transition-all duration-300 hover:scale-[1.02]",
+                                !isReady && "cursor-not-allowed opacity-50 hover:scale-100"
+                              )}
+                            >
+                              {query}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <h1 className="text-display gradient-sunset-text">
-                      Ask your library
-                    </h1>
-                    <p className="text-title text-muted-foreground max-w-xl mx-auto">
-                      Get instant answers from O'Reilly, Manning, and Pearson technical books
-                    </p>
-                    <p className="text-body text-muted-foreground/80 max-w-xl mx-auto">
-                      Trusted summaries, citations, and highlights from the sources you already rely on.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Feature chips */}
-                <div className="flex flex-wrap justify-center gap-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
-                  {FEATURE_CHIPS.map((chip, i) => (
-                    <div
-                      key={chip.label}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-full glass-panel",
-                        "animate-gentle-float"
-                      )}
-                      style={{ animationDelay: `${i * 200}ms` }}
-                    >
-                      <chip.icon className={cn("h-4 w-4", chip.color)} />
-                      <span className="text-caption text-foreground/80">{chip.label}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Suggested queries */}
-                <div className="flex flex-wrap justify-center gap-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
-                  {[
-                    'What are React best practices?',
-                    'Explain microservices architecture',
-                    'How does Docker networking work?',
-                  ].map((query) => (
-                    <button
-                      key={query}
-                      onClick={() => handleSubmit(query)}
-                      disabled={!isReady}
-                      className={cn(
-                        "px-4 py-2 rounded-xl text-caption",
-                        "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
-                        "transition-all duration-300 hover:scale-[1.02]",
-                        !isReady && "cursor-not-allowed opacity-50 hover:scale-100"
-                      )}
-                    >
-                      {query}
-                    </button>
-                  ))}
                 </div>
               </div>
             </div>
