@@ -88,15 +88,20 @@ export function AppHeader({
           {/* Theme toggle */}
           <Button 
             variant="ghost" 
-            size="icon"
+            size="sm"
             onClick={onToggleTheme}
-            className="h-9 w-9 hover:bg-secondary/50 hover:text-primary transition-all duration-300 group"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="h-9 px-3 gap-2 hover:bg-secondary/50 hover:text-primary transition-all duration-300 group"
           >
             {isDark ? (
               <Sun className="h-4 w-4 transition-transform duration-500 group-hover:rotate-90" />
             ) : (
               <Moon className="h-4 w-4 transition-transform duration-500 group-hover:-rotate-12" />
             )}
+            <span className="hidden md:inline text-xs font-medium">
+              {isDark ? 'Light mode' : 'Dark mode'}
+            </span>
           </Button>
         </div>
 

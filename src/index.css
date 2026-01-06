@@ -17,7 +17,7 @@
     --neutral-875: 220 15% 10%;
     --neutral-850: 220 15% 12%;
     --neutral-800: 220 15% 16%;
-    --neutral-500: 220 10% 50%;
+    --neutral-500: 220 10% 62%;
     --neutral-100: 0 0% 96%;
 
     --brand-gold: 45 70% 55%;
@@ -47,7 +47,7 @@
     --primary-foreground: 0 0% 10%;
 
     --secondary: var(--neutral-850);
-    --secondary-foreground: 0 0% 88%;
+    --secondary-foreground: 0 0% 92%;
 
     --muted: var(--neutral-800);
     --muted-foreground: var(--neutral-500);
@@ -60,7 +60,7 @@
 
     --border: var(--neutral-800);
     --input: var(--neutral-800);
-    --ring: var(--brand-gold);
+    --ring: var(--brand-lavender);
 
     --radius-sm: 0.5rem;
     --radius-md: 0.75rem;
@@ -69,7 +69,7 @@
     --radius: var(--radius-lg);
 
     --sidebar-background: 220 15% 4%;
-    --sidebar-foreground: 220 10% 55%;
+    --sidebar-foreground: 220 10% 62%;
     --sidebar-primary: var(--brand-gold);
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: var(--neutral-875);
@@ -157,7 +157,7 @@
     --primary-foreground: 0 0% 10%;
 
     --secondary: var(--neutral-850);
-    --secondary-foreground: 0 0% 88%;
+    --secondary-foreground: 0 0% 92%;
 
     --muted: var(--neutral-800);
     --muted-foreground: var(--neutral-500);
@@ -170,10 +170,10 @@
 
     --border: var(--neutral-800);
     --input: var(--neutral-800);
-    --ring: var(--brand-gold);
+    --ring: var(--brand-lavender);
 
     --sidebar-background: 220 15% 4%;
-    --sidebar-foreground: 220 10% 55%;
+    --sidebar-foreground: 220 10% 62%;
     --sidebar-primary: var(--brand-gold);
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: var(--neutral-875);
@@ -226,24 +226,24 @@
      SURFACE SYSTEM
      ======================================== */
   .surface-base {
-    @apply border border-border/20 bg-background/70;
+    @apply border border-border/30 bg-background/85;
   }
 
   .surface-card {
-    @apply border border-border/20 bg-card/85 rounded-[var(--radius-xl)];
+    @apply border border-border/30 bg-card/90 rounded-[var(--radius-xl)];
   }
 
   .surface-glass {
-    @apply border border-border/20 bg-background/60 backdrop-blur-xl;
+    @apply border border-border/35 bg-background/75 backdrop-blur-xl;
     box-shadow: var(--shadow-glass-subtle);
   }
 
   .surface-elevated {
-    @apply border border-border/25 bg-card/90 backdrop-blur-xl rounded-[var(--radius-xl)] shadow-lg;
+    @apply border border-border/35 bg-card/95 backdrop-blur-xl rounded-[var(--radius-xl)] shadow-lg;
   }
 
   .surface-interactive {
-    @apply transition-all duration-300 hover:border-primary/40 focus-within:ring-2 focus-within:ring-primary/40;
+    @apply transition-all duration-300 hover:border-primary/40 focus-within:ring-2 focus-within:ring-ring/60;
   }
 }
 
@@ -255,10 +255,10 @@
     @apply backdrop-blur-2xl;
     background: linear-gradient(
       135deg,
-      hsl(0 0% 100% / 0.06) 0%,
-      hsl(0 0% 100% / 0.02) 100%
+      hsl(220 15% 12% / 0.9) 0%,
+      hsl(220 15% 6% / 0.75) 100%
     );
-    border: 1px solid hsl(0 0% 100% / 0.1);
+    border: 1px solid hsl(0 0% 100% / 0.12);
     box-shadow: var(--shadow-glass);
   }
   
@@ -266,10 +266,10 @@
     @apply backdrop-blur-xl;
     background: linear-gradient(
       135deg,
-      hsl(0 0% 100% / 0.03) 0%,
-      hsl(0 0% 100% / 0.01) 100%
+      hsl(220 15% 12% / 0.65) 0%,
+      hsl(220 15% 7% / 0.5) 100%
     );
-    border: 1px solid hsl(0 0% 100% / 0.06);
+    border: 1px solid hsl(0 0% 100% / 0.08);
   }
 
   .glass-panel {
@@ -282,8 +282,8 @@
     @apply backdrop-blur-xl;
     background: linear-gradient(
       145deg,
-      hsl(220 15% 10% / 0.95) 0%,
-      hsl(220 15% 6% / 0.9) 100%
+      hsl(220 15% 10% / 0.98) 0%,
+      hsl(220 15% 6% / 0.95) 100%
     );
     border: 1px solid hsl(0 0% 100% / 0.08);
     box-shadow: var(--shadow-glass-subtle);
@@ -378,9 +378,9 @@
   
   .gradient-mesh {
     background: 
-      radial-gradient(at 10% 90%, hsl(var(--brand-gold) / 0.12) 0%, transparent 50%),
-      radial-gradient(at 90% 10%, hsl(var(--brand-lavender) / 0.12) 0%, transparent 50%),
-      radial-gradient(at 50% 50%, hsl(var(--brand-periwinkle) / 0.08) 0%, transparent 50%);
+      radial-gradient(at 10% 90%, hsl(var(--brand-gold) / 0.2) 0%, transparent 55%),
+      radial-gradient(at 90% 10%, hsl(var(--brand-lavender) / 0.2) 0%, transparent 55%),
+      radial-gradient(at 50% 50%, hsl(var(--brand-periwinkle) / 0.16) 0%, transparent 60%);
   }
 
   /* ========================================
