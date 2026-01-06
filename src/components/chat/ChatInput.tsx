@@ -19,6 +19,7 @@ export function ChatInput({
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isSubmitDisabled = !value.trim() || isLoading || disabled;
 
   // Auto-resize textarea
   useEffect(() => {
@@ -48,9 +49,9 @@ export function ChatInput({
     <div className="w-full max-w-3xl mx-auto px-4">
       <div 
         className={cn(
-          "relative flex items-end gap-3 rounded-2xl transition-all duration-400 p-3",
-          "glass-card",
-          isFocused && "ring-2 ring-primary/40 glow-primary-subtle border-animated"
+          "relative flex items-end gap-3 rounded-3xl transition-all duration-300 p-4",
+          "glass-card shadow-sm",
+          isFocused && "ring-2 ring-primary/40 glow-primary-subtle border-animated shadow-lg"
         )}
       >
         {/* Sparkle icon */}
@@ -72,14 +73,14 @@ export function ChatInput({
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder={placeholder || "Ask about your technical library..."}
+          placeholder={placeholder || "Ask about your library..."}
           rows={1}
           className={cn(
             "flex-1 bg-transparent border-none resize-none",
-            "text-sm leading-relaxed",
+            "text-base leading-6",
             "placeholder:text-muted-foreground/40",
             "focus:outline-none focus:ring-0",
-            "min-h-[24px] max-h-[200px] py-1"
+            "min-h-[32px] max-h-[200px] py-2"
           )}
           disabled={isLoading || disabled}
         />
@@ -87,18 +88,20 @@ export function ChatInput({
         {/* Submit button */}
         <Button
           onClick={handleSubmit}
-          disabled={!value.trim() || isLoading || disabled}
+          disabled={isSubmitDisabled}
           size="icon"
           className={cn(
-            "h-9 w-9 rounded-xl shrink-0",
-            "btn-primary-vibrant",
+            "h-10 w-10 rounded-full shrink-0",
+            "btn-primary-vibrant transition-all",
+            "hover:shadow-md hover:-translate-y-0.5",
+            "disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0",
             isLoading && "animate-pulse-glow"
           )}
         >
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Send className="h-4 w-4" />
+            <Send className={cn("h-4 w-4", isSubmitDisabled ? "text-muted-foreground" : "text-white")} />
           )}
         </Button>
       </div>
@@ -107,11 +110,11 @@ export function ChatInput({
       <div className="flex items-center justify-center gap-4 mt-3 text-[11px] text-muted-foreground/50">
         <span className="flex items-center gap-1.5">
           <kbd className="px-1.5 py-0.5 rounded bg-secondary/50 border border-border/30 font-mono text-[9px]">Enter</kbd>
-          to send
+          <span className="text-muted-foreground/60">Press Enter to send</span>
         </span>
         <span className="flex items-center gap-1.5">
           <kbd className="px-1.5 py-0.5 rounded bg-secondary/50 border border-border/30 font-mono text-[9px]">Shift+Enter</kbd>
-          new line
+          <span className="text-muted-foreground/60">New line</span>
         </span>
       </div>
     </div>
