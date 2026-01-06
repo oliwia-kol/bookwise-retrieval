@@ -1,5 +1,12 @@
-import { Settings, Sun, Moon, Sparkles, Plus } from 'lucide-react';
+import { Settings, Sun, Moon, Sparkles, Plus, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useHealth } from '@/hooks/useSearch';
 import { cn } from '@/lib/utils';
 
@@ -40,7 +47,7 @@ export function AppHeader({
             variant="outline"
             size="sm"
             onClick={onNewChat}
-            className="h-8 px-3 text-caption border-border/30 hover:border-primary/50 hover:bg-primary/5 gap-1.5"
+            className="hidden h-8 px-3 text-caption border-border/30 hover:border-primary/50 hover:bg-primary/5 gap-1.5 sm:inline-flex"
           >
             <Plus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">New Chat</span>
@@ -67,29 +74,64 @@ export function AppHeader({
           </span>
         </div>
 
-        {/* Settings */}
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={onOpenSettings}
-          className="h-9 w-9 hover:bg-secondary/50 hover:text-primary transition-all duration-300"
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
+        <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+          {/* Settings */}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onOpenSettings}
+            className="h-9 w-9 hover:bg-secondary/50 hover:text-primary transition-all duration-300"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
 
-        {/* Theme toggle */}
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={onToggleTheme}
-          className="h-9 w-9 hover:bg-secondary/50 hover:text-primary transition-all duration-300 group"
-        >
-          {isDark ? (
-            <Sun className="h-4 w-4 transition-transform duration-500 group-hover:rotate-90" />
-          ) : (
-            <Moon className="h-4 w-4 transition-transform duration-500 group-hover:-rotate-12" />
-          )}
-        </Button>
+          {/* Theme toggle */}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onToggleTheme}
+            className="h-9 w-9 hover:bg-secondary/50 hover:text-primary transition-all duration-300 group"
+          >
+            {isDark ? (
+              <Sun className="h-4 w-4 transition-transform duration-500 group-hover:rotate-90" />
+            ) : (
+              <Moon className="h-4 w-4 transition-transform duration-500 group-hover:-rotate-12" />
+            )}
+          </Button>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 sm:hidden hover:bg-secondary/50 hover:text-primary transition-all duration-300"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {onNewChat && (
+              <DropdownMenuItem onClick={onNewChat} className="gap-2">
+                <Plus className="h-4 w-4" />
+                New chat
+              </DropdownMenuItem>
+            )}
+            {onNewChat && <DropdownMenuSeparator />}
+            <DropdownMenuItem onClick={onOpenSettings} className="gap-2">
+              <Settings className="h-4 w-4" />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onToggleTheme} className="gap-2">
+              {isDark ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+              {isDark ? 'Light mode' : 'Dark mode'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

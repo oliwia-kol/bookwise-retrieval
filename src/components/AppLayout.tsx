@@ -50,7 +50,7 @@ export function AppLayout() {
   const { data: searchResult, isLoading } = useSearch(currentQuery, filters, isReady);
 
   const availablePublishers: Publisher[] = health?.publishers || ['OReilly', 'Manning', 'Pearson'];
-  const layoutContainer = "w-full max-w-5xl mx-auto px-6 sm:px-8 lg:px-12";
+  const layoutContainer = "w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-12";
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -147,43 +147,43 @@ export function AppLayout() {
         />
 
         {/* Chat area */}
-        <div className="flex-1 flex flex-col min-h-0 pb-32">
+        <div className="flex-1 flex flex-col min-h-0 pb-24 sm:pb-32">
           {!hasMessages ? (
             /* Empty state - Hero */
             <div className="flex-1 flex flex-col items-center justify-center">
               <div className={cn("w-full flex flex-col items-center", layoutContainer)}>
                 <div className="w-full max-w-4xl animate-fade-in">
-                  <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-background/70 px-6 py-12 text-center shadow-[0_30px_80px_rgba(12,10,24,0.35)] backdrop-blur-2xl sm:px-12 sm:py-16">
+                  <div className="relative overflow-hidden rounded-[26px] sm:rounded-[32px] border border-white/10 bg-background/70 px-4 py-8 text-center shadow-[0_30px_80px_rgba(12,10,24,0.35)] backdrop-blur-2xl sm:px-12 sm:py-16">
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent" />
-                    <div className="relative flex flex-col items-center gap-10">
+                    <div className="relative flex flex-col items-center gap-8 sm:gap-10">
                       {/* Animated logo */}
-                      <div className="relative h-20 w-20 mx-auto">
+                      <div className="relative h-16 w-16 sm:h-20 sm:w-20 mx-auto">
                         <div className="absolute inset-0 rounded-2xl gradient-sunset opacity-25 blur-2xl animate-breathe" />
                         <div className="relative h-full w-full rounded-2xl gradient-warm flex items-center justify-center glow-primary">
-                          <Sparkles className="h-9 w-9 text-white" />
+                          <Sparkles className="h-7 w-7 sm:h-9 sm:w-9 text-white" />
                         </div>
                       </div>
 
-                      <div className="space-y-5">
-                        <h1 className="text-display gradient-sunset-text">
+                      <div className="space-y-4 sm:space-y-5">
+                        <h1 className="text-3xl sm:text-display gradient-sunset-text">
                           Ask your library
                         </h1>
-                        <p className="text-title text-muted-foreground max-w-2xl mx-auto">
+                        <p className="text-base sm:text-title text-muted-foreground max-w-2xl mx-auto">
                           Get instant answers from O'Reilly, Manning, and Pearson technical books
                         </p>
-                        <p className="text-body text-muted-foreground/80 max-w-2xl mx-auto">
+                        <p className="text-sm sm:text-body text-muted-foreground/80 max-w-2xl mx-auto">
                           Trusted summaries, citations, and highlights from the sources you already rely on.
                         </p>
                       </div>
 
                       {/* Feature chips */}
-                      <div className="flex flex-wrap justify-center gap-3">
+                      <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                         {FEATURE_CHIPS.map((chip, i) => (
                           <div
                             key={chip.label}
                             className={cn(
                               "flex items-center gap-3 rounded-full border border-white/10",
-                              "bg-background/60 px-4 py-2.5 min-w-[150px] justify-center",
+                              "bg-background/60 px-4 py-2.5 w-full sm:w-auto sm:min-w-[150px] justify-center",
                               "shadow-[0_10px_25px_rgba(12,10,24,0.15)]",
                               "animate-gentle-float"
                             )}
@@ -198,7 +198,7 @@ export function AppLayout() {
                       </div>
 
                       {/* Action row */}
-                      <div className="flex flex-col items-center gap-4">
+                      <div className="flex flex-col items-center gap-3 sm:gap-4">
                         <Button
                           onClick={() => handleSubmit(SUGGESTED_QUERIES[0])}
                           disabled={!isReady}
@@ -213,14 +213,14 @@ export function AppLayout() {
                           Try a suggested query
                         </Button>
 
-                        <div className="flex flex-wrap justify-center gap-3">
+                        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full">
                           {SUGGESTED_QUERIES.map((query) => (
                             <button
                               key={query}
                               onClick={() => handleSubmit(query)}
                               disabled={!isReady}
                               className={cn(
-                                "px-4 py-2 rounded-xl text-caption",
+                                "px-4 py-2.5 rounded-xl text-xs sm:text-caption w-full sm:w-auto",
                                 "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
                                 "transition-all duration-300 hover:scale-[1.02]",
                                 !isReady && "cursor-not-allowed opacity-50 hover:scale-100"
@@ -239,7 +239,7 @@ export function AppLayout() {
           ) : (
             /* Chat messages */
             <ScrollArea className="flex-1">
-              <div className={cn("py-12 space-y-12", layoutContainer)}>
+              <div className={cn("py-8 sm:py-12 space-y-6 sm:space-y-12", layoutContainer)}>
                 {messages.map((message) => (
                   <ChatMessage
                     key={message.id}
@@ -253,7 +253,7 @@ export function AppLayout() {
 
           {/* Input area */}
           <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/10 bg-background/80 backdrop-blur-xl">
-            <div className={cn("py-4", layoutContainer)}>
+            <div className={cn("py-3 sm:py-4", layoutContainer)}>
               <ChatInput
                 onSubmit={handleSubmit}
                 isLoading={isLoading}

@@ -46,21 +46,21 @@ export function ChatInput({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4">
+    <div className="w-full max-w-3xl mx-auto px-3 sm:px-4">
       <div 
         className={cn(
-          "relative flex items-end gap-3 p-4",
+          "relative flex items-end gap-2 sm:gap-3 p-3 sm:p-4",
           "surface-elevated surface-interactive",
           isFocused && "glow-primary-subtle border-animated"
         )}
       >
         {/* Sparkle icon */}
         <div className={cn(
-          "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300",
+          "h-7 w-7 sm:h-8 sm:w-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300",
           isFocused ? "gradient-warm glow-primary-subtle" : "bg-secondary"
         )}>
           <Sparkles className={cn(
-            "h-4 w-4 transition-colors",
+            "h-3.5 w-3.5 sm:h-4 sm:w-4 transition-colors",
             isFocused ? "text-white" : "text-muted-foreground"
           )} />
         </div>
@@ -77,7 +77,7 @@ export function ChatInput({
           rows={1}
           className={cn(
             "flex-1 bg-transparent border-none resize-none",
-            "text-base leading-6",
+            "text-sm sm:text-base leading-6",
             "placeholder:text-muted-foreground/40",
             "focus:outline-none focus:ring-0",
             "min-h-[32px] max-h-[200px] py-2"
@@ -91,7 +91,7 @@ export function ChatInput({
           disabled={isSubmitDisabled}
           size="icon"
           className={cn(
-            "h-10 w-10 rounded-full shrink-0",
+            "h-9 w-9 sm:h-10 sm:w-10 rounded-full shrink-0",
             "btn-primary-vibrant transition-all",
             "hover:shadow-md hover:-translate-y-0.5",
             "disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0",
@@ -107,7 +107,7 @@ export function ChatInput({
       </div>
 
       {/* Hints */}
-      <div className="flex items-center justify-center gap-4 mt-3 text-[11px] text-muted-foreground/50">
+      <div className="hidden sm:flex items-center justify-center gap-4 mt-3 text-[11px] text-muted-foreground/50">
         <span className="flex items-center gap-1.5">
           <kbd className="px-1.5 py-0.5 rounded bg-secondary/50 border border-border/30 font-mono text-[9px]">Enter</kbd>
           <span className="text-muted-foreground/60">Press Enter to send</span>
