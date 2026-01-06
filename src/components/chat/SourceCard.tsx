@@ -33,19 +33,20 @@ export function SourceCard({ source, index, onClick }: SourceCardProps) {
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-xl text-left",
-        "transition-all duration-300 hover:scale-[1.02]",
-        "border",
+        "group relative flex items-center gap-2 px-3 py-2 rounded-xl text-left overflow-hidden",
+        "transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_16px_35px_rgba(8,8,20,0.35)]",
+        "border backdrop-blur-sm",
         config.bg, config.border
       )}
     >
+      <span className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <span className={cn(
-        "flex items-center justify-center h-5 w-5 rounded-md text-[10px] font-bold",
+        "relative flex items-center justify-center h-5 w-5 rounded-md text-[10px] font-bold",
         "bg-foreground/10", config.text
       )}>
         {index}
       </span>
-      <div className="min-w-0">
+      <div className="relative min-w-0">
         <p className="text-xs font-medium truncate max-w-[120px]">
           {source.title}
         </p>
@@ -53,7 +54,7 @@ export function SourceCard({ source, index, onClick }: SourceCardProps) {
           {source.publisher}
         </p>
       </div>
-      <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+      <ExternalLink className="relative h-3 w-3 text-muted-foreground shrink-0" />
     </button>
   );
 }

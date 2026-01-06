@@ -126,9 +126,9 @@ export function SearchBar({
           <Button
             onClick={onSubmit}
             disabled={!value || isLoading}
+            variant="cta"
             className={cn(
               "h-11 px-6 rounded-xl font-medium",
-              "btn-primary-vibrant",
               isLoading && "animate-pulse-glow"
             )}
           >

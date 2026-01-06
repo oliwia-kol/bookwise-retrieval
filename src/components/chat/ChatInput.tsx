@@ -90,9 +90,10 @@ export function ChatInput({
           onClick={handleSubmit}
           disabled={isSubmitDisabled}
           size="icon"
+          variant="cta"
           className={cn(
             "h-9 w-9 sm:h-10 sm:w-10 rounded-full shrink-0",
-            "btn-primary-vibrant transition-all",
+            "transition-all",
             "hover:shadow-md hover:-translate-y-0.5",
             "disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0",
             isLoading && "animate-pulse-glow"

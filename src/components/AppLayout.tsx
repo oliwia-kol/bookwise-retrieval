@@ -152,6 +152,7 @@ export function AppLayout() {
       
       {/* Main content */}
       <div className="relative z-10 flex-1 flex flex-col min-h-0">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[hsl(var(--brand-gold)/0.18)] via-transparent to-transparent" />
         <AppHeader 
           onOpenSettings={() => setSettingsOpen(true)}
           onNewChat={hasMessages ? handleNewChat : undefined}
@@ -215,9 +216,10 @@ export function AppLayout() {
                         <Button
                           onClick={() => handleSubmit(SUGGESTED_QUERIES[0])}
                           disabled={!isReady}
+                          variant="cta"
                           className={cn(
                             "gap-2 rounded-full px-6 py-3 text-sm",
-                            "btn-primary-vibrant shadow-lg shadow-primary/30",
+                            "shadow-lg shadow-primary/30",
                             "hover:-translate-y-0.5 hover:shadow-xl",
                             "transition-all duration-200 motion-reduce:transition-none motion-reduce:transform-none",
                             "disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
