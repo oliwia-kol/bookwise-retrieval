@@ -1,6 +1,7 @@
 """FastAPI wrapper for RAG engine - run in Codespaces alongside rag_engine.py"""
 
 import asyncio
+import inspect
 from collections import deque
 import logging
 import math
@@ -267,6 +268,25 @@ def _format_hits(hits: list) -> list:
     return [_format_hit(h, i) for i, h in enumerate(hits)]
 
 
+def _compose_chat_answer(query: str, result: dict) -> str:
+    if not hasattr(rag, "generate_answer"):
+        return result.get("answer", "")
+    generate_answer = rag.generate_answer
+    try:
+        signature = inspect.signature(generate_answer)
+    except (TypeError, ValueError):
+        return generate_answer(query, result.get("hits", []), result.get("answer"))
+    params = list(signature.parameters.values())
+    if any(p.kind == inspect.Parameter.VAR_POSITIONAL for p in params):
+        return generate_answer(query, result.get("hits", []), result.get("answer"))
+    positional_params = [
+        p for p in params if p.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+    ]
+    if len(positional_params) <= 1:
+        return generate_answer(result)
+    return generate_answer(query, result.get("hits", []), result.get("answer"))
+
+
 @app.get("/health")
 async def health():
     """Health check endpoint."""
@@ -424,11 +444,7 @@ async def chat(req: ChatRequest):
     try:
         preferred_mode = "exact" if "exact" in _available_modes() else "quick"
         result = rag.run_query(engine, req.message, mode=preferred_mode)
-        answer = (
-            rag.generate_answer(req.message, result.get("hits", []), result.get("answer"))
-            if hasattr(rag, "generate_answer")
-            else result.get("answer", "")
-        )
+        answer = _compose_chat_answer(req.message, result)
         
         return {
             "ok": True,
