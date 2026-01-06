@@ -8,122 +8,178 @@
 
 @layer base {
   :root {
-    --background: 220 15% 5%;
-    --foreground: 0 0% 96%;
+    /* ================================
+       BRAND + NEUTRAL TOKENS
+       ================================ */
+    --neutral-950: 220 15% 5%;
+    --neutral-925: 220 15% 6%;
+    --neutral-900: 220 15% 8%;
+    --neutral-875: 220 15% 10%;
+    --neutral-850: 220 15% 12%;
+    --neutral-800: 220 15% 16%;
+    --neutral-500: 220 10% 50%;
+    --neutral-100: 0 0% 96%;
 
-    --card: 220 15% 8%;
-    --card-foreground: 0 0% 96%;
+    --brand-gold: 45 70% 55%;
+    --brand-honey: 38 75% 52%;
+    --brand-amber: 35 80% 50%;
+    --brand-coral: 15 65% 62%;
+    --brand-rose: 350 38% 70%;
+    --brand-lavender: 255 55% 70%;
+    --brand-periwinkle: 232 50% 65%;
+    --brand-slate-blue: 225 45% 55%;
+    --brand-cyan: 185 55% 55%;
+    --brand-sage: 150 40% 52%;
 
-    --popover: 220 15% 6%;
-    --popover-foreground: 0 0% 96%;
+    /* ================================
+       CORE UI TOKENS
+       ================================ */
+    --background: var(--neutral-950);
+    --foreground: var(--neutral-100);
 
-    /* Warm golden yellow primary - visible but not too bright */
-    --primary: 48 90% 50%;
+    --card: var(--neutral-900);
+    --card-foreground: var(--neutral-100);
+
+    --popover: var(--neutral-925);
+    --popover-foreground: var(--neutral-100);
+
+    --primary: var(--brand-gold);
     --primary-foreground: 0 0% 10%;
 
-    --secondary: 220 15% 12%;
+    --secondary: var(--neutral-850);
     --secondary-foreground: 0 0% 88%;
 
-    --muted: 220 15% 16%;
-    --muted-foreground: 220 10% 50%;
+    --muted: var(--neutral-800);
+    --muted-foreground: var(--neutral-500);
 
-    /* Electric violet accent */
-    --accent: 262 83% 58%;
+    --accent: var(--brand-lavender);
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 96%;
 
-    --border: 220 15% 16%;
-    --input: 220 15% 16%;
-    --ring: 48 90% 50%;
+    --border: var(--neutral-800);
+    --input: var(--neutral-800);
+    --ring: var(--brand-gold);
 
-    --radius: 1rem;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius: var(--radius-lg);
 
     --sidebar-background: 220 15% 4%;
     --sidebar-foreground: 220 10% 55%;
-    --sidebar-primary: 48 90% 50%;
+    --sidebar-primary: var(--brand-gold);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 10%;
-    --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 220 15% 12%;
-    --sidebar-ring: 48 90% 50%;
+    --sidebar-accent: var(--neutral-875);
+    --sidebar-accent-foreground: var(--neutral-100);
+    --sidebar-border: var(--neutral-850);
+    --sidebar-ring: var(--brand-gold);
 
-    /* Premium warm palette - balanced warmth */
-    --color-gold: 45 70% 55%;
-    --color-honey: 38 75% 52%;
+    /* ================================
+       GRADIENT STOPS
+       ================================ */
+    --gradient-sunset-1: var(--brand-gold);
+    --gradient-sunset-2: var(--brand-coral);
+    --gradient-sunset-3: var(--brand-rose);
+    --gradient-sunset-4: var(--brand-lavender);
+    --gradient-sunset-5: var(--brand-cyan);
+
+    --gradient-warm-1: var(--brand-gold);
+    --gradient-warm-2: var(--brand-honey);
+    --gradient-warm-3: var(--brand-rose);
+
+    /* ================================
+       SHADOWS
+       ================================ */
+    --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.4),
+      inset 0 1px 0 hsl(0 0% 100% / 0.05);
+    --shadow-glass-subtle: 0 4px 24px hsl(0 0% 0% / 0.5),
+      inset 0 1px 0 hsl(0 0% 100% / 0.04);
+    --shadow-glow-primary: 0 0 20px hsl(var(--brand-gold) / 0.3),
+      0 0 35px hsl(var(--brand-coral) / 0.15),
+      0 0 50px hsl(var(--brand-lavender) / 0.1);
+    --shadow-glow-accent: 0 0 20px hsl(var(--brand-lavender) / 0.35),
+      0 0 40px hsl(var(--brand-periwinkle) / 0.18);
+    --shadow-glow-warm: 0 0 20px hsl(var(--brand-coral) / 0.3),
+      0 0 40px hsl(var(--brand-honey) / 0.2);
+    --shadow-glow-rainbow: 0 0 15px hsl(var(--brand-gold) / 0.2),
+      0 0 30px hsl(var(--brand-coral) / 0.15),
+      0 0 45px hsl(var(--brand-lavender) / 0.15),
+      0 0 60px hsl(var(--brand-cyan) / 0.1);
+
+    /* ================================
+       LEGACY MAPPINGS
+       ================================ */
+    --color-gold: var(--brand-gold);
+    --color-honey: var(--brand-honey);
     --color-cream: 48 50% 72%;
-    --color-amber: 35 80% 50%;
-    --color-coral: 15 65% 62%;
-    
-    /* Premium cool palette - lavender elegance */
-    --color-lavender: 255 55% 70%;
-    --color-periwinkle: 232 50% 65%;
-    --color-slate-blue: 225 45% 55%;
-    --color-cyan: 185 55% 55%;
-    
-    /* Balanced accents */
-    --color-sage: 150 40% 52%;
-    --color-dusty-rose: 350 38% 70%;
-    
-    /* Legacy mappings for compatibility */
+    --color-amber: var(--brand-amber);
+    --color-coral: var(--brand-coral);
+    --color-lavender: var(--brand-lavender);
+    --color-periwinkle: var(--brand-periwinkle);
+    --color-slate-blue: var(--brand-slate-blue);
+    --color-cyan: var(--brand-cyan);
+    --color-sage: var(--brand-sage);
+    --color-dusty-rose: var(--brand-rose);
     --color-orange: 30 70% 58%;
     --color-yellow: 48 70% 60%;
-    --color-violet: 255 55% 70%;
+    --color-violet: var(--brand-lavender);
     --color-purple: 262 55% 65%;
-    --color-green: 150 40% 52%;
-    --color-rose: 350 38% 70%;
-    
+    --color-green: var(--brand-sage);
+    --color-rose: var(--brand-rose);
+
     /* Tier colors - premium spectrum */
-    --tier-strong: 150 40% 50%;
+    --tier-strong: var(--brand-sage);
     --tier-solid: 252 60% 68%;
-    --tier-weak: 42 80% 50%;
-    --tier-poor: 350 40% 68%;
-    
-    /* Glow system */
-    --glow-primary: 45 75% 55%;
+    --tier-weak: var(--brand-amber);
+    --tier-poor: var(--brand-rose);
+
+    /* Glow system (legacy) */
+    --glow-primary: var(--brand-gold);
     --glow-accent: 252 60% 68%;
-    --glow-warm: 42 80% 50%;
-    --glow-success: 150 40% 50%;
+    --glow-warm: var(--brand-amber);
+    --glow-success: var(--brand-sage);
   }
 
   .dark {
-    --background: 220 15% 5%;
-    --foreground: 0 0% 96%;
+    --background: var(--neutral-950);
+    --foreground: var(--neutral-100);
 
-    --card: 220 15% 8%;
-    --card-foreground: 0 0% 96%;
+    --card: var(--neutral-900);
+    --card-foreground: var(--neutral-100);
 
-    --popover: 220 15% 6%;
-    --popover-foreground: 0 0% 96%;
+    --popover: var(--neutral-925);
+    --popover-foreground: var(--neutral-100);
 
-    --primary: 48 90% 50%;
+    --primary: var(--brand-gold);
     --primary-foreground: 0 0% 10%;
 
-    --secondary: 220 15% 12%;
+    --secondary: var(--neutral-850);
     --secondary-foreground: 0 0% 88%;
 
-    --muted: 220 15% 16%;
-    --muted-foreground: 220 10% 50%;
+    --muted: var(--neutral-800);
+    --muted-foreground: var(--neutral-500);
 
-    --accent: 262 83% 58%;
+    --accent: var(--brand-lavender);
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 96%;
 
-    --border: 220 15% 16%;
-    --input: 220 15% 16%;
-    --ring: 48 90% 50%;
+    --border: var(--neutral-800);
+    --input: var(--neutral-800);
+    --ring: var(--brand-gold);
 
     --sidebar-background: 220 15% 4%;
     --sidebar-foreground: 220 10% 55%;
-    --sidebar-primary: 48 90% 50%;
+    --sidebar-primary: var(--brand-gold);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 10%;
-    --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 220 15% 12%;
-    --sidebar-ring: 48 90% 50%;
+    --sidebar-accent: var(--neutral-875);
+    --sidebar-accent-foreground: var(--neutral-100);
+    --sidebar-border: var(--neutral-850);
+    --sidebar-ring: var(--brand-gold);
   }
 }
 
@@ -177,9 +233,7 @@
       hsl(0 0% 100% / 0.02) 100%
     );
     border: 1px solid hsl(0 0% 100% / 0.1);
-    box-shadow: 
-      0 8px 32px hsl(0 0% 0% / 0.4),
-      inset 0 1px 0 hsl(0 0% 100% / 0.05);
+    box-shadow: var(--shadow-glass);
   }
   
   .glass-subtle {
@@ -191,6 +245,12 @@
     );
     border: 1px solid hsl(0 0% 100% / 0.06);
   }
+
+  .glass-panel {
+    @apply glass-subtle;
+    border-color: hsl(var(--border) / 0.6);
+    box-shadow: var(--shadow-glass-subtle);
+  }
   
   .glass-card {
     @apply backdrop-blur-xl;
@@ -200,45 +260,31 @@
       hsl(220 15% 6% / 0.9) 100%
     );
     border: 1px solid hsl(0 0% 100% / 0.08);
-    box-shadow: 
-      0 4px 24px hsl(0 0% 0% / 0.5),
-      inset 0 1px 0 hsl(0 0% 100% / 0.04);
+    box-shadow: var(--shadow-glass-subtle);
   }
 
   /* ========================================
      GLOW EFFECTS SYSTEM
      ======================================== */
   .glow-primary {
-    box-shadow: 
-      0 0 20px hsl(var(--color-gold) / 0.3),
-      0 0 35px hsl(var(--color-coral) / 0.15),
-      0 0 50px hsl(var(--color-lavender) / 0.1);
+    box-shadow: var(--shadow-glow-primary);
   }
   
   .glow-primary-subtle {
-    box-shadow: 
-      0 0 15px hsl(var(--color-gold) / 0.22),
-      0 0 30px hsl(var(--color-lavender) / 0.12);
+    box-shadow: 0 0 15px hsl(var(--brand-gold) / 0.22),
+      0 0 30px hsl(var(--brand-lavender) / 0.12);
   }
   
   .glow-accent {
-    box-shadow: 
-      0 0 20px hsl(var(--color-lavender) / 0.35),
-      0 0 40px hsl(var(--color-periwinkle) / 0.18);
+    box-shadow: var(--shadow-glow-accent);
   }
   
   .glow-warm {
-    box-shadow: 
-      0 0 20px hsl(var(--color-coral) / 0.3),
-      0 0 40px hsl(var(--color-honey) / 0.2);
+    box-shadow: var(--shadow-glow-warm);
   }
   
   .glow-rainbow {
-    box-shadow: 
-      0 0 15px hsl(var(--color-gold) / 0.2),
-      0 0 30px hsl(var(--color-coral) / 0.15),
-      0 0 45px hsl(var(--color-lavender) / 0.15),
-      0 0 60px hsl(var(--color-cyan) / 0.1);
+    box-shadow: var(--shadow-glow-rainbow);
   }
 
   /* ========================================
@@ -247,20 +293,20 @@
   .gradient-warm {
     background: linear-gradient(
       135deg,
-      hsl(var(--color-gold)) 0%,
-      hsl(var(--color-coral)) 50%,
-      hsl(var(--color-dusty-rose)) 100%
+      hsl(var(--gradient-warm-1)) 0%,
+      hsl(var(--gradient-warm-2)) 50%,
+      hsl(var(--gradient-warm-3)) 100%
     );
   }
   
   .gradient-warm-text {
     background: linear-gradient(
       90deg,
-      hsl(var(--color-gold)) 0%,
-      hsl(var(--color-coral)) 25%,
-      hsl(var(--color-dusty-rose)) 50%,
-      hsl(var(--color-lavender)) 75%,
-      hsl(var(--color-cyan)) 100%
+      hsl(var(--gradient-sunset-1)) 0%,
+      hsl(var(--gradient-sunset-2)) 25%,
+      hsl(var(--gradient-sunset-3)) 50%,
+      hsl(var(--gradient-sunset-4)) 75%,
+      hsl(var(--gradient-sunset-5)) 100%
     );
     background-size: 200% auto;
     -webkit-background-clip: text;
@@ -272,22 +318,22 @@
   .gradient-sunset {
     background: linear-gradient(
       135deg,
-      hsl(var(--color-gold)) 0%,
-      hsl(var(--color-coral)) 25%,
-      hsl(var(--color-dusty-rose)) 50%,
-      hsl(var(--color-lavender)) 75%,
-      hsl(var(--color-cyan)) 100%
+      hsl(var(--gradient-sunset-1)) 0%,
+      hsl(var(--gradient-sunset-2)) 25%,
+      hsl(var(--gradient-sunset-3)) 50%,
+      hsl(var(--gradient-sunset-4)) 75%,
+      hsl(var(--gradient-sunset-5)) 100%
     );
   }
   
   .gradient-sunset-text {
     background: linear-gradient(
       90deg,
-      hsl(var(--color-gold)) 0%,
-      hsl(var(--color-coral)) 25%,
-      hsl(var(--color-dusty-rose)) 50%,
-      hsl(var(--color-lavender)) 75%,
-      hsl(var(--color-cyan)) 100%
+      hsl(var(--gradient-sunset-1)) 0%,
+      hsl(var(--gradient-sunset-2)) 25%,
+      hsl(var(--gradient-sunset-3)) 50%,
+      hsl(var(--gradient-sunset-4)) 75%,
+      hsl(var(--gradient-sunset-5)) 100%
     );
     background-size: 300% auto;
     -webkit-background-clip: text;
@@ -299,16 +345,16 @@
   .gradient-primary {
     background: linear-gradient(
       135deg,
-      hsl(var(--color-gold)) 0%,
-      hsl(var(--color-honey)) 100%
+      hsl(var(--brand-gold)) 0%,
+      hsl(var(--brand-honey)) 100%
     );
   }
   
   .gradient-mesh {
     background: 
-      radial-gradient(at 10% 90%, hsl(var(--color-gold) / 0.12) 0%, transparent 50%),
-      radial-gradient(at 90% 10%, hsl(var(--color-lavender) / 0.12) 0%, transparent 50%),
-      radial-gradient(at 50% 50%, hsl(var(--color-periwinkle) / 0.08) 0%, transparent 50%);
+      radial-gradient(at 10% 90%, hsl(var(--brand-gold) / 0.12) 0%, transparent 50%),
+      radial-gradient(at 90% 10%, hsl(var(--brand-lavender) / 0.12) 0%, transparent 50%),
+      radial-gradient(at 50% 50%, hsl(var(--brand-periwinkle) / 0.08) 0%, transparent 50%);
   }
 
   /* ========================================
@@ -372,15 +418,15 @@
      ======================================== */
   .text-glow {
     text-shadow: 
-      0 0 10px hsl(var(--color-gold) / 0.45),
-      0 0 20px hsl(var(--color-gold) / 0.25);
+      0 0 10px hsl(var(--brand-gold) / 0.45),
+      0 0 20px hsl(var(--brand-gold) / 0.25);
   }
   
   .text-glow-warm {
     text-shadow: 
-      0 0 10px hsl(var(--color-honey) / 0.45),
+      0 0 10px hsl(var(--brand-honey) / 0.45),
       0 0 20px hsl(var(--color-cream) / 0.3),
-      0 0 30px hsl(var(--color-lavender) / 0.2);
+      0 0 30px hsl(var(--brand-lavender) / 0.2);
   }
 
   /* ========================================
@@ -394,7 +440,7 @@
     transform: translateY(-4px) scale(1.01);
     box-shadow: 
       0 12px 40px hsl(0 0% 0% / 0.5),
-      0 0 20px hsl(var(--color-gold) / 0.12);
+      0 0 20px hsl(var(--brand-gold) / 0.12);
   }
   
   .hover-glow {
@@ -402,8 +448,8 @@
   }
   
   .hover-glow:hover {
-    box-shadow: 0 0 25px hsl(var(--color-gold) / 0.3);
-    border-color: hsl(var(--color-gold) / 0.45);
+    box-shadow: 0 0 25px hsl(var(--brand-gold) / 0.3);
+    border-color: hsl(var(--brand-gold) / 0.45);
   }
 
   /* ========================================
@@ -420,10 +466,10 @@
   }
   
   .card-premium:hover {
-    border-color: hsl(var(--color-gold) / 0.35);
+    border-color: hsl(var(--brand-gold) / 0.35);
     box-shadow: 
       0 8px 40px hsl(0 0% 0% / 0.5),
-      0 0 20px hsl(var(--color-gold) / 0.1);
+      0 0 20px hsl(var(--brand-gold) / 0.1);
     transform: translateY(-2px);
   }
   
@@ -434,10 +480,10 @@
   }
   
   .card-interactive:hover {
-    border-color: hsl(var(--color-gold) / 0.28);
+    border-color: hsl(var(--brand-gold) / 0.28);
     box-shadow: 
       0 12px 48px hsl(0 0% 0% / 0.6),
-      0 0 24px hsl(var(--color-gold) / 0.08);
+      0 0 24px hsl(var(--brand-gold) / 0.08);
     transform: translateY(-3px) scale(1.005);
   }
 
@@ -447,10 +493,10 @@
   .chat-message-user {
     background: linear-gradient(
       135deg,
-      hsl(var(--color-gold) / 0.12) 0%,
-      hsl(var(--color-honey) / 0.08) 100%
+      hsl(var(--brand-gold) / 0.12) 0%,
+      hsl(var(--brand-honey) / 0.08) 100%
     );
-    border: 1px solid hsl(var(--color-gold) / 0.18);
+    border: 1px solid hsl(var(--brand-gold) / 0.18);
   }
   
   .chat-message-assistant {
@@ -539,10 +585,10 @@
   /* Pulse glow for buttons */
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 20px hsl(var(--color-gold) / 0.25);
+      box-shadow: 0 0 20px hsl(var(--brand-gold) / 0.25);
     }
     50% {
-      box-shadow: 0 0 40px hsl(var(--color-gold) / 0.4);
+      box-shadow: 0 0 40px hsl(var(--brand-gold) / 0.4);
     }
   }
   
@@ -619,9 +665,9 @@
 
   /* Button primary vibrant - rainbow gradient */
   .btn-primary-vibrant {
-    background: linear-gradient(135deg, hsl(var(--color-lavender)) 0%, hsl(var(--color-periwinkle)) 100%);
+    background: linear-gradient(135deg, hsl(var(--brand-lavender)) 0%, hsl(var(--brand-periwinkle)) 100%);
     color: hsl(0 0% 100%);
-    box-shadow: 0 4px 20px hsl(var(--color-lavender) / 0.35);
+    box-shadow: 0 4px 20px hsl(var(--brand-lavender) / 0.35);
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     font-weight: 500;
   }
@@ -629,8 +675,8 @@
   .btn-primary-vibrant:hover {
     transform: translateY(-2px) scale(1.02);
     box-shadow: 
-      0 8px 30px hsl(var(--color-lavender) / 0.4),
-      0 0 20px hsl(var(--color-coral) / 0.2);
+      0 8px 30px hsl(var(--brand-lavender) / 0.4),
+      0 0 20px hsl(var(--brand-coral) / 0.2);
   }
   
   .btn-primary-vibrant:disabled {
@@ -643,23 +689,23 @@
   @keyframes rainbow-glow {
     0%, 100% {
       box-shadow: 
-        0 0 20px hsl(var(--color-gold) / 0.4),
-        0 0 40px hsl(var(--color-gold) / 0.2);
+        0 0 20px hsl(var(--brand-gold) / 0.4),
+        0 0 40px hsl(var(--brand-gold) / 0.2);
     }
     25% {
       box-shadow: 
-        0 0 20px hsl(var(--color-coral) / 0.4),
-        0 0 40px hsl(var(--color-coral) / 0.2);
+        0 0 20px hsl(var(--brand-coral) / 0.4),
+        0 0 40px hsl(var(--brand-coral) / 0.2);
     }
     50% {
       box-shadow: 
-        0 0 20px hsl(var(--color-lavender) / 0.4),
-        0 0 40px hsl(var(--color-lavender) / 0.2);
+        0 0 20px hsl(var(--brand-lavender) / 0.4),
+        0 0 40px hsl(var(--brand-lavender) / 0.2);
     }
     75% {
       box-shadow: 
-        0 0 20px hsl(var(--color-cyan) / 0.4),
-        0 0 40px hsl(var(--color-cyan) / 0.2);
+        0 0 20px hsl(var(--brand-cyan) / 0.4),
+        0 0 40px hsl(var(--brand-cyan) / 0.2);
     }
   }
 
