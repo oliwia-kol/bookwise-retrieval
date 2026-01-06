@@ -37,16 +37,28 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
 
   if (message.isLoading) {
     return (
-      <div className="flex gap-4 animate-fade-in">
-        <div className="h-9 w-9 rounded-xl gradient-warm flex items-center justify-center shrink-0 glow-primary-subtle">
-          <Sparkles className="h-4 w-4 text-primary-foreground" />
+      <div className="flex gap-3 sm:gap-4 animate-fade-in motion-reduce:animate-none">
+        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl gradient-warm flex items-center justify-center shrink-0 glow-primary-subtle">
+          <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-foreground" />
         </div>
-        <div className="flex-1 pt-1">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-primary typing-dot" />
-            <div className="h-2 w-2 rounded-full bg-primary typing-dot" />
-            <div className="h-2 w-2 rounded-full bg-primary typing-dot" />
+        <div className="flex-1">
+          <div className="w-full sm:max-w-[560px]">
+            <div className="rounded-[26px] p-[1px] bg-gradient-to-br from-sky-400/30 via-violet-400/15 to-transparent">
+              <div className="rounded-[25px] px-3 py-2.5 sm:px-4 sm:py-3 chat-message-assistant backdrop-blur-sm">
+                <div className="space-y-3">
+                  <div className="h-3 w-3/4 rounded-full bg-muted/60 animate-pulse motion-reduce:animate-none" />
+                  <div className="h-3 w-11/12 rounded-full bg-muted/50 animate-pulse motion-reduce:animate-none" />
+                  <div className="h-3 w-2/5 rounded-full bg-muted/40 animate-pulse motion-reduce:animate-none" />
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <div className="h-6 w-16 rounded-full bg-muted/40 animate-pulse motion-reduce:animate-none" />
+                  <div className="h-6 w-20 rounded-full bg-muted/40 animate-pulse motion-reduce:animate-none" />
+                  <div className="h-6 w-14 rounded-full bg-muted/40 animate-pulse motion-reduce:animate-none" />
+                </div>
+              </div>
+            </div>
           </div>
+          <div className="mt-2 h-2 w-24 rounded-full bg-muted/40 animate-pulse motion-reduce:animate-none" />
         </div>
       </div>
     );
@@ -54,7 +66,7 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
 
   return (
     <>
-      <div className={cn("flex gap-3 sm:gap-4 animate-slide-up-fade", isUser && "flex-row-reverse")}>
+      <div className={cn("flex gap-3 sm:gap-4 animate-slide-up-fade motion-reduce:animate-none", isUser && "flex-row-reverse")}>
         {/* Avatar */}
         <div className={cn(
           "h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shrink-0",
@@ -106,7 +118,7 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "absolute -right-10 top-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity",
+                      "absolute -right-10 top-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-200 motion-reduce:transition-none",
                       "hover:bg-primary/10 hover:text-primary"
                     )}
                     onClick={handleCopy}
