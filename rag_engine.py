@@ -13,6 +13,7 @@ import re
 import sqlite3
 import time
 import json
+import os
 from functools import lru_cache
 from logging.handlers import RotatingFileHandler
 from statistics import pstdev
@@ -442,16 +443,25 @@ class Eng:
     corp_status: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
 
-def _mk_eng(base_out: Path = BASE_OUT, emb_model: str = "sentence-transformers/all-MiniLM-L6-v2") -> Eng:
+def _mk_eng(
+    base_out: Path = BASE_OUT,
+    emb_model: str | None = "sentence-transformers/all-MiniLM-L6-v2",
+) -> Eng:
     # validate corp folders (softly to avoid start-up crashes)
     c2p = {k: (base_out / k) for k in CORP.keys()}
     reports = {k: chk(p) for k, p in c2p.items()}
     ready: Dict[str, Path] = {k: p for k, p in c2p.items() if reports.get(k, {}).get("ok")}
 
-    try:
-        emb: Optional[SentenceTransformer] = SentenceTransformer(emb_model)
-    except Exception:
-        emb = None
+    emb: Optional[SentenceTransformer] = None
+    if emb_model:
+        local_only = os.getenv("RAG_EMBED_LOCAL_ONLY", "").strip().lower() in {"1", "true", "yes"}
+        try:
+            if local_only:
+                emb = SentenceTransformer(emb_model, local_files_only=True)
+            else:
+                emb = SentenceTransformer(emb_model)
+        except Exception:
+            emb = None
     emb_dim = None
     try:
         emb_dim = int(emb.get_sentence_embedding_dimension()) if emb is not None else None

@@ -4,24 +4,56 @@ import asyncio
 from collections import deque
 import logging
 import math
+import os
 import sqlite3
+import threading
 import time
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 
 # Import the RAG engine
+rag = None
+ENGINE = None
+ENGINE_AVAILABLE = False
+ENGINE_ERROR: str | None = None
+_ENGINE_LOCK = threading.Lock()
+
 try:
     import rag_engine as rag
-    ENGINE = rag._mk_eng()
-    ENGINE_AVAILABLE = True
 except Exception as e:
-    logging.warning(f"RAG engine not available: {e}")
-    ENGINE = None
-    ENGINE_AVAILABLE = False
+    logging.warning("RAG engine module not available: %s", e)
+
+
+def _should_skip_embed() -> bool:
+    return os.getenv("RAG_SKIP_EMBED_MODEL", "").strip().lower() in {"1", "true", "yes"}
+
+
+def _get_engine():
+    global ENGINE, ENGINE_AVAILABLE, ENGINE_ERROR
+    if ENGINE_AVAILABLE:
+        return ENGINE
+    if rag is None:
+        return None
+    with _ENGINE_LOCK:
+        if ENGINE_AVAILABLE:
+            return ENGINE
+        try:
+            emb_model = os.getenv("RAG_EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+            if _should_skip_embed():
+                emb_model = None
+            ENGINE = rag._mk_eng(emb_model=emb_model)
+            ENGINE_AVAILABLE = True
+            ENGINE_ERROR = None
+        except Exception as e:
+            logging.warning("RAG engine not available: %s", e)
+            ENGINE = None
+            ENGINE_AVAILABLE = False
+            ENGINE_ERROR = str(e)
+    return ENGINE
 
 app = FastAPI(title="RAG Books API", version="1.0.0")
 
@@ -59,7 +91,7 @@ def _error_response(message: str, code: str, status_code: int, headers: Optional
 
 
 def _available_modes() -> set[str]:
-    if ENGINE_AVAILABLE and hasattr(rag, "mode_options"):
+    if rag is not None and hasattr(rag, "mode_options"):
         return {m.get("name", "").lower() for m in rag.mode_options() if m.get("name")}
     return {"quick", "exact"}
 
@@ -131,7 +163,7 @@ async def root():
 
 class SearchRequest(BaseModel):
     query: str
-    pubs: list[str] = []
+    pubs: list[str] = Field(default_factory=list)
     jmin: float = 0.0
     sort: str = "Judge"
     mode: str = "quick"
@@ -187,7 +219,7 @@ class SearchRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    history: list[dict] = []
+    history: list[dict] = Field(default_factory=list)
 
     @field_validator("message")
     @classmethod
@@ -238,7 +270,8 @@ def _format_hits(hits: list) -> list:
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    if not ENGINE_AVAILABLE:
+    engine = _get_engine()
+    if not ENGINE_AVAILABLE or engine is None:
         return {
             "ok": False,
             "corpus_count": 0,
@@ -247,10 +280,10 @@ async def health():
             "engine_available": False,
             "corpora_ok": False,
             "ready": False,
-            "error": "RAG engine not loaded",
+            "error": ENGINE_ERROR or "RAG engine not loaded",
         }
     
-    report = rag.get_startup_report(ENGINE)
+    report = rag.get_startup_report(engine)
     publishers = list(report.get("ok", []))
     if not publishers and isinstance(report, dict):
         if "by_corpus" in report:
@@ -273,13 +306,14 @@ async def health():
 @app.post("/search")
 async def search(req: SearchRequest):
     """Search the corpus."""
-    if not ENGINE_AVAILABLE:
+    engine = _get_engine()
+    if not ENGINE_AVAILABLE or engine is None:
         raise HTTPException(
             status_code=503,
-            detail={"message": "RAG engine not available", "code": "ENGINE_UNAVAILABLE"},
+            detail={"message": ENGINE_ERROR or "RAG engine not available", "code": "ENGINE_UNAVAILABLE"},
         )
 
-    available_publishers = set(getattr(ENGINE, "corp", {}) or {})
+    available_publishers = set(getattr(engine, "corp", {}) or {})
     if not available_publishers:
         raise HTTPException(
             status_code=503,
@@ -299,7 +333,7 @@ async def search(req: SearchRequest):
     
     try:
         result = rag.run_query(
-            ENGINE,
+            engine,
             req.query,
             pubs=req.pubs if req.pubs else None,
             mode=req.mode,
@@ -380,15 +414,21 @@ async def search(req: SearchRequest):
 @app.post("/chat")
 async def chat(req: ChatRequest):
     """Chat endpoint for conversational queries."""
-    if not ENGINE_AVAILABLE:
+    engine = _get_engine()
+    if not ENGINE_AVAILABLE or engine is None:
         raise HTTPException(
             status_code=503,
-            detail={"message": "RAG engine not available", "code": "ENGINE_UNAVAILABLE"},
+            detail={"message": ENGINE_ERROR or "RAG engine not available", "code": "ENGINE_UNAVAILABLE"},
         )
     
     try:
-        result = rag.run_query(ENGINE, req.message, mode="thorough")
-        answer = rag.generate_answer(result) if hasattr(rag, 'generate_answer') else result.get("answer", "")
+        preferred_mode = "exact" if "exact" in _available_modes() else "quick"
+        result = rag.run_query(engine, req.message, mode=preferred_mode)
+        answer = (
+            rag.generate_answer(req.message, result.get("hits", []), result.get("answer"))
+            if hasattr(rag, "generate_answer")
+            else result.get("answer", "")
+        )
         
         return {
             "ok": True,
@@ -419,17 +459,18 @@ async def suggestions(q: str = ""):
 @app.get("/history")
 async def history(limit: int = Query(20, ge=1, le=100)):
     """Get recent query history."""
-    if not ENGINE_AVAILABLE or not hasattr(rag, "get_recent_queries"):
+    engine = _get_engine()
+    if not ENGINE_AVAILABLE or engine is None or not hasattr(rag, "get_recent_queries"):
         raise HTTPException(
             status_code=503,
-            detail={"message": "History not available", "code": "HISTORY_UNAVAILABLE"},
+            detail={"message": ENGINE_ERROR or "History not available", "code": "HISTORY_UNAVAILABLE"},
         )
     return {"ok": True, "queries": rag.get_recent_queries(limit=limit)}
 
 
-def _publisher_stats() -> dict[str, dict]:
+def _publisher_stats(engine) -> dict[str, dict]:
     stats = {}
-    for pub, db_path in getattr(ENGINE, "dbp", {}).items():
+    for pub, db_path in getattr(engine, "dbp", {}).items():
         db_stats = {
             "publisher": pub,
             "chunks": None,
@@ -461,17 +502,18 @@ def _publisher_stats() -> dict[str, dict]:
 @app.get("/stats")
 async def stats():
     """Return detailed corpus statistics per publisher."""
-    if not ENGINE_AVAILABLE:
+    engine = _get_engine()
+    if not ENGINE_AVAILABLE or engine is None:
         raise HTTPException(
             status_code=503,
-            detail={"message": "RAG engine not available", "code": "ENGINE_UNAVAILABLE"},
+            detail={"message": ENGINE_ERROR or "RAG engine not available", "code": "ENGINE_UNAVAILABLE"},
         )
-    report = rag.get_startup_report(ENGINE) if hasattr(rag, "get_startup_report") else {}
-    detailed = _publisher_stats()
+    report = rag.get_startup_report(engine) if hasattr(rag, "get_startup_report") else {}
+    detailed = _publisher_stats(engine)
     return {
         "ok": True,
         "startup_report": report,
-        "corp_status": getattr(ENGINE, "corp_status", {}),
+        "corp_status": getattr(engine, "corp_status", {}),
         "publisher_stats": detailed,
     }
 

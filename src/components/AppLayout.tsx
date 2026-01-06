@@ -72,13 +72,28 @@ export function AppLayout() {
         if (!searchResult.ok) {
           return withoutLoading;
         }
-        
-        // Create response based on results
-        const responseContent = searchResult.hits.length > 0
-          ? `I found **${searchResult.hits.length} relevant sources** for your query. Here are the key findings:\n\n${searchResult.hits.slice(0, 3).map((hit, i) => 
-              `**${i + 1}. ${hit.title}** _(${hit.publisher})_\n\n${hit.snippet}`
-            ).join('\n\n---\n\n')}`
-          : "I couldn't find any relevant sources for your query. Try rephrasing or asking about a different topic.";
+
+        const hits = searchResult.hits ?? [];
+        const sourceCount = hits.length;
+        const topHits = hits.slice(0, 3);
+        const answer = typeof searchResult.answer === 'string' ? searchResult.answer.trim() : '';
+
+        const responseContent = [
+          `Answer`,
+          answer || (sourceCount > 0
+            ? 'Here are the most relevant passages I found in your library.'
+            : "I don't know based on the current sources. Try rephrasing or choosing a different topic."),
+          ``,
+          `Sources (${sourceCount})`,
+          sourceCount > 0
+            ? topHits.map((hit, i) => (
+                `${i + 1}. ${hit.title} — ${hit.publisher}${hit.section ? ` · ${hit.section}` : ''}\n   ${hit.snippet}`
+              )).join('\n\n')
+            : 'No sources matched this query.',
+          ``,
+          `Quality`,
+          `Coverage: ${searchResult.coverage ?? 'Unknown'} · Confidence: ${(searchResult.confidence ?? 0).toFixed(2)}`,
+        ].join('\n');
 
         return [...withoutLoading, {
           id: `assistant-${Date.now()}`,
@@ -167,7 +182,7 @@ export function AppLayout() {
             <div className="flex-1 flex flex-col items-center justify-center">
               <div className={cn("w-full flex flex-col items-center", layoutContainer)}>
                 <div className="w-full max-w-4xl animate-fade-in motion-reduce:animate-none">
-                  <div className="relative overflow-hidden rounded-[26px] sm:rounded-[32px] border border-white/10 bg-background/70 px-4 py-8 text-center shadow-[0_30px_80px_rgba(12,10,24,0.35)] backdrop-blur-2xl sm:px-12 sm:py-16">
+                  <div className="relative overflow-hidden rounded-[26px] sm:rounded-[32px] bg-background/65 px-4 py-8 text-center shadow-[0_30px_80px_rgba(12,10,24,0.35)] backdrop-blur-2xl sm:px-12 sm:py-16">
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent" />
                     <div className="relative flex flex-col items-center gap-8 sm:gap-10">
                       {/* Animated logo */}
