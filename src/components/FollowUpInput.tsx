@@ -64,9 +64,9 @@ export function FollowUpInput({ onSubmit, isLoading = false, className }: Follow
           onClick={handleSubmit}
           disabled={!value.trim() || isLoading}
           size="icon"
+          variant="cta"
           className={cn(
             "absolute right-2 h-8 w-8 rounded-xl",
-            "btn-primary-vibrant",
             "disabled:opacity-30"
           )}
         >

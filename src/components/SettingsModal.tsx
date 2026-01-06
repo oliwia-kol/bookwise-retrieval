@@ -105,26 +105,26 @@ export function SettingsModal({
             <Label className="text-caption">Search Mode</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
-                variant={filters.mode === 'quick' ? 'default' : 'outline'}
+                variant={filters.mode === 'quick' ? 'cta' : 'outline'}
                 size="sm"
                 onClick={() => updateFilter('mode', 'quick')}
                 className={cn(
                   "w-full text-caption transition-all duration-300",
-                  filters.mode === 'quick' 
-                    ? "btn-primary-vibrant" 
+                  filters.mode === 'quick'
+                    ? "shadow-none"
                     : "border-border/30 hover:border-primary/50 hover:bg-primary/5"
                 )}
               >
                 Quick
               </Button>
               <Button
-                variant={filters.mode === 'exact' ? 'default' : 'outline'}
+                variant={filters.mode === 'exact' ? 'cta' : 'outline'}
                 size="sm"
                 onClick={() => updateFilter('mode', 'exact')}
                 className={cn(
                   "w-full text-caption transition-all duration-300",
-                  filters.mode === 'exact' 
-                    ? "btn-primary-vibrant" 
+                  filters.mode === 'exact'
+                    ? "shadow-none"
                     : "border-border/30 hover:border-primary/50 hover:bg-primary/5"
                 )}
               >

@@ -58,8 +58,8 @@ export function EvidenceCard({
     <div 
       ref={cardRef}
       className={cn(
-        "group relative rounded-2xl p-5 cursor-pointer",
-        "glass-card hover-lift",
+        "group relative overflow-hidden rounded-2xl p-5 cursor-pointer",
+        "glass-card hover-lift border border-white/10",
         "animate-slide-up-fade",
         isSelected && "ring-2 ring-primary/50 glow-primary-subtle"
       )}
@@ -80,6 +80,7 @@ export function EvidenceCard({
           background: `radial-gradient(ellipse at 50% 0%, ${tier.glow}15 0%, transparent 60%)`,
         }}
       />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
       {/* Header: Publisher + Title */}
       <div className="flex items-start justify-between gap-3 mb-3 relative z-10">
@@ -133,11 +134,11 @@ export function EvidenceCard({
         </Button>
         
         <Button 
-          variant="ghost" 
-          size="sm" 
+          variant="cta"
+          size="sm"
           className={cn(
-            "h-7 text-xs text-muted-foreground hover:text-primary gap-1 px-2",
-            "transition-all duration-400",
+            "h-7 text-xs gap-1 px-2 rounded-full",
+            "transition-all duration-400 shadow-none",
             isHovering ? "opacity-100" : "opacity-0"
           )}
         >
