@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Sparkles, BookOpen, Zap, Library, CheckCircle2 } from 'lucide-react';
+import { Sparkles, BookOpen, Zap, Library, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { AppHeader } from './AppHeader';
 import { ChatMessage } from './chat/ChatMessage';
 import { ChatInput } from './chat/ChatInput';
@@ -42,6 +42,7 @@ export function AppLayout() {
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [currentQuery, setCurrentQuery] = useState('');
+  const [searchFailure, setSearchFailure] = useState<{ title: string; description: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { isDark, toggleTheme } = useTheme();
@@ -67,15 +68,17 @@ export function AppLayout() {
       // Remove loading message and add assistant response
       setMessages(prev => {
         const withoutLoading = prev.filter(m => !m.isLoading);
+
+        if (!searchResult.ok) {
+          return withoutLoading;
+        }
         
         // Create response based on results
-        const responseContent = !searchResult.ok
-          ? `Search is currently unavailable. ${searchResult.error || 'Please check the backend and try again.'}`
-          : searchResult.hits.length > 0
-            ? `I found **${searchResult.hits.length} relevant sources** for your query. Here are the key findings:\n\n${searchResult.hits.slice(0, 3).map((hit, i) => 
-                `**${i + 1}. ${hit.title}** _(${hit.publisher})_\n\n${hit.snippet}`
-              ).join('\n\n---\n\n')}`
-            : "I couldn't find any relevant sources for your query. Try rephrasing or asking about a different topic.";
+        const responseContent = searchResult.hits.length > 0
+          ? `I found **${searchResult.hits.length} relevant sources** for your query. Here are the key findings:\n\n${searchResult.hits.slice(0, 3).map((hit, i) => 
+              `**${i + 1}. ${hit.title}** _(${hit.publisher})_\n\n${hit.snippet}`
+            ).join('\n\n---\n\n')}`
+          : "I couldn't find any relevant sources for your query. Try rephrasing or asking about a different topic.";
 
         return [...withoutLoading, {
           id: `assistant-${Date.now()}`,
@@ -85,6 +88,14 @@ export function AppLayout() {
           timestamp: new Date(),
         }];
       });
+      if (!searchResult.ok) {
+        setSearchFailure({
+          title: 'Search is temporarily unavailable',
+          description: searchResult.error || 'Please confirm the backend is running and try again.',
+        });
+      } else {
+        setSearchFailure(null);
+      }
       setCurrentQuery('');
     }
   }, [searchResult, currentQuery]);
@@ -110,12 +121,14 @@ export function AppLayout() {
 
     setMessages(prev => [...prev, userMessage, loadingMessage]);
     setCurrentQuery(message);
+    setSearchFailure(null);
   }, [isReady]);
 
   const handleNewChat = useCallback(() => {
     setMessages([]);
     setCurrentQuery('');
     processedQueryRef.current = null;
+    setSearchFailure(null);
   }, []);
 
   // Keyboard shortcuts
@@ -152,13 +165,13 @@ export function AppLayout() {
             /* Empty state - Hero */
             <div className="flex-1 flex flex-col items-center justify-center">
               <div className={cn("w-full flex flex-col items-center", layoutContainer)}>
-                <div className="w-full max-w-4xl animate-fade-in">
+                <div className="w-full max-w-4xl animate-fade-in motion-reduce:animate-none">
                   <div className="relative overflow-hidden rounded-[26px] sm:rounded-[32px] border border-white/10 bg-background/70 px-4 py-8 text-center shadow-[0_30px_80px_rgba(12,10,24,0.35)] backdrop-blur-2xl sm:px-12 sm:py-16">
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent" />
                     <div className="relative flex flex-col items-center gap-8 sm:gap-10">
                       {/* Animated logo */}
                       <div className="relative h-16 w-16 sm:h-20 sm:w-20 mx-auto">
-                        <div className="absolute inset-0 rounded-2xl gradient-sunset opacity-25 blur-2xl animate-breathe" />
+                        <div className="absolute inset-0 rounded-2xl gradient-sunset opacity-25 blur-2xl animate-breathe motion-reduce:animate-none" />
                         <div className="relative h-full w-full rounded-2xl gradient-warm flex items-center justify-center glow-primary">
                           <Sparkles className="h-7 w-7 sm:h-9 sm:w-9 text-white" />
                         </div>
@@ -185,7 +198,7 @@ export function AppLayout() {
                               "flex items-center gap-3 rounded-full border border-white/10",
                               "bg-background/60 px-4 py-2.5 w-full sm:w-auto sm:min-w-[150px] justify-center",
                               "shadow-[0_10px_25px_rgba(12,10,24,0.15)]",
-                              "animate-gentle-float"
+                              "animate-gentle-float motion-reduce:animate-none"
                             )}
                             style={{ animationDelay: `${i * 200}ms` }}
                           >
@@ -206,6 +219,7 @@ export function AppLayout() {
                             "gap-2 rounded-full px-6 py-3 text-sm",
                             "btn-primary-vibrant shadow-lg shadow-primary/30",
                             "hover:-translate-y-0.5 hover:shadow-xl",
+                            "transition-all duration-200 motion-reduce:transition-none motion-reduce:transform-none",
                             "disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
                           )}
                         >
@@ -222,7 +236,7 @@ export function AppLayout() {
                               className={cn(
                                 "px-4 py-2.5 rounded-xl text-xs sm:text-caption w-full sm:w-auto",
                                 "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
-                                "transition-all duration-300 hover:scale-[1.02]",
+                                "transition-all duration-200 hover:scale-[1.02] motion-reduce:transition-none motion-reduce:transform-none",
                                 !isReady && "cursor-not-allowed opacity-50 hover:scale-100"
                               )}
                             >
@@ -246,6 +260,27 @@ export function AppLayout() {
                     message={message}
                   />
                 ))}
+                {searchFailure && (
+                  <div className="animate-fade-in motion-reduce:animate-none">
+                    <div className="relative overflow-hidden rounded-[24px] border border-border/30 bg-background/70 p-5 sm:p-7 shadow-[0_20px_50px_rgba(12,10,24,0.25)] backdrop-blur-xl">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent" />
+                      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/70 border border-border/40">
+                          <AlertTriangle className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-title text-foreground">{searchFailure.title}</h3>
+                          <p className="text-sm sm:text-body text-muted-foreground">
+                            {searchFailure.description}
+                          </p>
+                          <p className="text-xs sm:text-caption text-muted-foreground/70">
+                            Keep this tab open and try again in a moment.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
