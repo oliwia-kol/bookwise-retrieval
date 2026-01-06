@@ -252,6 +252,11 @@ async def health():
     
     report = rag.get_startup_report(ENGINE)
     publishers = list(report.get("ok", []))
+    if not publishers and isinstance(report, dict):
+        if "by_corpus" in report:
+            publishers = [name for name, row in report["by_corpus"].items() if row.get("ok")]
+        else:
+            publishers = [name for name, ok in report.items() if ok is True]
     corpora_ok = len(publishers) > 0
     
     return {
