@@ -7,6 +7,12 @@
 */
 
 @layer base {
+  /* Motif mapping (discoverability)
+     Palette: --primary, --accent, --color-gold, --color-honey, --color-coral, --color-lavender, --color-periwinkle, --color-cyan.
+     Glow: .glow-primary, .glow-accent, .glow-warm, .text-glow, .text-glow-warm, .animate-pulse-glow.
+     Gradients: .gradient-warm, .gradient-sunset, .gradient-primary, .gradient-mesh, .border-gradient-warm.
+     Motion: .hover-lift, .hover-glow, .animate-breathe, .animate-gentle-float, .animate-slide-up-fade.
+  */
   :root {
     /* ================================
        BRAND + NEUTRAL TOKENS
