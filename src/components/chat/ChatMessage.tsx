@@ -17,6 +17,12 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
   const [selectedSource, setSelectedSource] = useState<EvidenceHit | null>(null);
   const isUser = message.role === 'user';
+  const formattedTime = new Intl.DateTimeFormat('en', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(message.timestamp);
+  const sourceCount = message.evidence?.length ?? 0;
+  const paragraphs = message.content.split(/\n\s*\n/);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -64,40 +70,67 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
         </div>
 
         {/* Content */}
-        <div className={cn("flex-1 max-w-[85%]", isUser && "flex flex-col items-end")}>
-          <div className={cn(
-            "rounded-2xl px-4 py-3 group relative",
-            isUser ? "chat-message-user" : "chat-message-assistant"
-          )}>
-            {/* Render assistant content with preserved line breaks */}
-            {isUser ? (
-              <p className="text-body whitespace-pre-wrap">
-                {message.content}
-              </p>
-            ) : (
-              <p className="text-body whitespace-pre-wrap text-foreground">
-                {message.content}
-              </p>
-            )}
-
-            {/* Copy button */}
-            {!isUser && (
-              <Button
-                variant="ghost"
-                size="icon"
+        <div className={cn("flex-1", isUser && "flex flex-col items-end")}>
+          <div className="w-full max-w-[560px]">
+            <div
+              className={cn(
+                "rounded-[26px] p-[1px] shadow-[0_14px_36px_rgba(0,0,0,0.18)]",
+                isUser
+                  ? "bg-gradient-to-br from-amber-400/40 via-amber-300/20 to-transparent"
+                  : "bg-gradient-to-br from-sky-400/30 via-violet-400/15 to-transparent"
+              )}
+            >
+              <div
                 className={cn(
-                  "absolute -right-10 top-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity",
-                  "hover:bg-primary/10 hover:text-primary"
+                  "rounded-[25px] px-4 py-3 group relative backdrop-blur-sm",
+                  isUser ? "chat-message-user" : "chat-message-assistant"
                 )}
-                onClick={handleCopy}
               >
-                {copied ? (
-                  <Check className="h-3.5 w-3.5 text-green-500" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
+                {/* Render assistant content with preserved line breaks */}
+                <div
+                  className={cn(
+                    "space-y-3 text-body whitespace-pre-wrap leading-relaxed",
+                    isUser ? "text-foreground" : "text-foreground"
+                  )}
+                >
+                  {paragraphs.map((paragraph, index) => (
+                    <p key={`${message.id}-${index}`} className="whitespace-pre-wrap">
+                      {paragraph.trimEnd()}
+                    </p>
+                  ))}
+                </div>
+
+                {/* Copy button */}
+                {!isUser && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "absolute -right-10 top-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity",
+                      "hover:bg-primary/10 hover:text-primary"
+                    )}
+                    onClick={handleCopy}
+                  >
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 text-green-500" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className={cn(
+              "mt-2 flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground/70",
+              isUser && "justify-end"
             )}
+          >
+            <span>{formattedTime}</span>
+            <span className="text-muted-foreground/40">•</span>
+            <span>{sourceCount} sources</span>
           </div>
 
           {/* Sources */}
