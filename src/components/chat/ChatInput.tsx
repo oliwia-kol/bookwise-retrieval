@@ -49,9 +49,9 @@ export function ChatInput({
     <div className="w-full max-w-3xl mx-auto px-4">
       <div 
         className={cn(
-          "relative flex items-end gap-3 rounded-3xl transition-all duration-300 p-4",
-          "glass-card shadow-sm",
-          isFocused && "ring-2 ring-primary/40 glow-primary-subtle border-animated shadow-lg"
+          "relative flex items-end gap-3 p-4",
+          "surface-elevated surface-interactive",
+          isFocused && "glow-primary-subtle border-animated"
         )}
       >
         {/* Sparkle icon */}

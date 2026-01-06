@@ -57,7 +57,7 @@ export function SettingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md glass-card border-border/20">
+      <DialogContent className="sm:max-w-md surface-elevated surface-interactive">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-title">
             <div className="h-8 w-8 rounded-lg gradient-warm flex items-center justify-center">
