@@ -58,8 +58,8 @@ export function EvidenceCard({
     <div 
       ref={cardRef}
       className={cn(
-        "group relative overflow-hidden rounded-2xl p-5 cursor-pointer",
-        "glass-card hover-lift border border-white/10",
+        "group relative overflow-hidden rounded-2xl p-5 cursor-pointer text-card-foreground",
+        "glass-card hover-lift hover-glow glow-primary-subtle border border-white/10",
         "animate-slide-up-fade",
         isSelected && "ring-2 ring-primary/50 glow-primary-subtle"
       )}
@@ -80,7 +80,7 @@ export function EvidenceCard({
           background: `radial-gradient(ellipse at 50% 0%, ${tier.glow}15 0%, transparent 60%)`,
         }}
       />
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="absolute inset-0 pointer-events-none gradient-warm opacity-0 transition-opacity duration-300 group-hover:opacity-20" />
 
       {/* Header: Publisher + Title */}
       <div className="flex items-start justify-between gap-3 mb-3 relative z-10">
@@ -94,7 +94,7 @@ export function EvidenceCard({
           >
             {hit.publisher}
           </Badge>
-          <span className="text-sm font-medium truncate">{hit.title}</span>
+          <span className="text-sm font-medium truncate text-card-foreground">{hit.title}</span>
         </div>
         
         {/* Tier indicator dot */}
@@ -110,7 +110,7 @@ export function EvidenceCard({
       </p>
 
       {/* Snippet */}
-      <p className="text-sm text-foreground/80 line-clamp-3 mb-4 leading-relaxed relative z-10">
+      <p className="text-sm text-card-foreground/80 line-clamp-3 mb-4 leading-relaxed relative z-10">
         {hit.snippet}
       </p>
 

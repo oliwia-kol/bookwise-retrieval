@@ -33,13 +33,12 @@ export function SourceCard({ source, index, onClick }: SourceCardProps) {
     <button
       onClick={onClick}
       className={cn(
-        "group relative flex items-center gap-2 px-3 py-2 rounded-xl text-left overflow-hidden",
-        "transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_16px_35px_rgba(8,8,20,0.35)]",
-        "border backdrop-blur-sm",
+        "group relative flex items-center gap-2 px-3 py-2 rounded-xl text-left overflow-hidden text-card-foreground",
+        "hover-lift hover-glow glow-primary-subtle border backdrop-blur-sm",
         config.bg, config.border
       )}
     >
-      <span className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <span className="absolute inset-0 pointer-events-none gradient-warm opacity-0 transition-opacity duration-300 group-hover:opacity-15" />
       <span className={cn(
         "relative flex items-center justify-center h-5 w-5 rounded-md text-[10px] font-bold",
         "bg-foreground/10", config.text
