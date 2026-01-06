@@ -95,6 +95,12 @@ export default {
         glass: "var(--shadow-glass)",
         "glass-subtle": "var(--shadow-glass-subtle)",
       },
+      fontSize: {
+        display: ["clamp(2.5rem, 4vw, 3.5rem)", { lineHeight: "1.1", fontWeight: "700", letterSpacing: "-0.02em" }],
+        title: ["1.5rem", { lineHeight: "1.3", fontWeight: "600" }],
+        body: ["1rem", { lineHeight: "1.65", fontWeight: "400" }],
+        caption: ["0.875rem", { lineHeight: "1.4", fontWeight: "500" }],
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

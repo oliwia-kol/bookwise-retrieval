@@ -59,7 +59,7 @@ export function SettingsModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md glass-card border-border/20">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg">
+          <DialogTitle className="flex items-center gap-2 text-title">
             <div className="h-8 w-8 rounded-lg gradient-warm flex items-center justify-center">
               <Settings className="h-4 w-4 text-white" />
             </div>
@@ -70,7 +70,7 @@ export function SettingsModal({
         <div className="space-y-6 py-4">
           {/* Publishers */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Publishers</Label>
+            <Label className="text-caption">Publishers</Label>
             <div className="space-y-2">
               {PUBLISHERS.map((pub) => {
                 const isAvailable = availablePublishers.includes(pub.id);
@@ -93,7 +93,7 @@ export function SettingsModal({
                       className="border-border/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
                     <span className={cn("w-2.5 h-2.5 rounded-full", pub.color)} />
-                    <span className="text-sm">{pub.label}</span>
+                    <span className="text-body">{pub.label}</span>
                   </label>
                 );
               })}
@@ -102,14 +102,14 @@ export function SettingsModal({
 
           {/* Search Mode */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Search Mode</Label>
+            <Label className="text-caption">Search Mode</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant={filters.mode === 'quick' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => updateFilter('mode', 'quick')}
                 className={cn(
-                  "w-full text-sm font-medium transition-all duration-300",
+                  "w-full text-caption transition-all duration-300",
                   filters.mode === 'quick' 
                     ? "btn-primary-vibrant" 
                     : "border-border/30 hover:border-primary/50 hover:bg-primary/5"
@@ -122,7 +122,7 @@ export function SettingsModal({
                 size="sm"
                 onClick={() => updateFilter('mode', 'exact')}
                 className={cn(
-                  "w-full text-sm font-medium transition-all duration-300",
+                  "w-full text-caption transition-all duration-300",
                   filters.mode === 'exact' 
                     ? "btn-primary-vibrant" 
                     : "border-border/30 hover:border-primary/50 hover:bg-primary/5"
@@ -135,17 +135,17 @@ export function SettingsModal({
 
           {/* Sort By */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Sort Results</Label>
+            <Label className="text-caption">Sort Results</Label>
             <Select 
               value={filters.sort} 
               onValueChange={(v) => updateFilter('sort', v as SortOption)}
             >
-              <SelectTrigger className="h-10 text-sm border-border/30 bg-card/80 hover:border-primary/50 transition-all">
+              <SelectTrigger className="h-10 text-body border-border/30 bg-card/80 hover:border-primary/50 transition-all">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-card border-border/30">
-                <SelectItem value="Best evidence" className="text-sm">Best Match</SelectItem>
-                <SelectItem value="Semantic" className="text-sm">Semantic Similarity</SelectItem>
+                <SelectItem value="Best evidence" className="text-body">Best Match</SelectItem>
+                <SelectItem value="Semantic" className="text-body">Semantic Similarity</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -153,8 +153,8 @@ export function SettingsModal({
           {/* Quality Filter */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <Label className="text-sm font-medium">Minimum Quality</Label>
-              <span className="text-sm text-primary font-mono">{(filters.jmin * 100).toFixed(0)}%</span>
+              <Label className="text-caption">Minimum Quality</Label>
+              <span className="text-caption text-primary font-mono">{(filters.jmin * 100).toFixed(0)}%</span>
             </div>
             <Slider
               value={[filters.jmin]}
@@ -168,7 +168,7 @@ export function SettingsModal({
 
           {/* Near-Miss Toggle */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border/20">
-            <Label className="text-sm">Show related results</Label>
+            <Label className="text-caption">Show related results</Label>
             <Switch
               checked={filters.show_near_miss}
               onCheckedChange={(v) => updateFilter('show_near_miss', v)}
