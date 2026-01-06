@@ -24,10 +24,10 @@ const DEFAULT_FILTERS: SearchFilters = {
 };
 
 const FEATURE_CHIPS = [
-  { icon: Sparkles, label: 'AI-Powered', color: 'text-[hsl(var(--color-lavender))]' },
-  { icon: Library, label: '3 Publishers', color: 'text-[hsl(var(--color-coral))]' },
-  { icon: Zap, label: 'Instant', color: 'text-[hsl(var(--color-cyan))]' },
-  { icon: CheckCircle2, label: 'Verified', color: 'text-[hsl(var(--color-sage))]' },
+  { icon: Sparkles, label: 'AI-Powered', color: 'text-brand-lavender' },
+  { icon: Library, label: '3 Publishers', color: 'text-brand-coral' },
+  { icon: Zap, label: 'Instant', color: 'text-brand-cyan' },
+  { icon: CheckCircle2, label: 'Verified', color: 'text-brand-sage' },
 ];
 
 export function AppLayout() {
@@ -166,7 +166,7 @@ export function AppLayout() {
                   <div
                     key={chip.label}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-full glass-subtle",
+                      "flex items-center gap-2 px-4 py-2 rounded-full glass-panel",
                       "animate-gentle-float"
                     )}
                     style={{ animationDelay: `${i * 200}ms` }}
