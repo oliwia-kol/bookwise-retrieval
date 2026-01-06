@@ -43,6 +43,7 @@ export function AppLayout() {
   const { data: searchResult, isLoading } = useSearch(currentQuery, filters, isReady);
 
   const availablePublishers: Publisher[] = health?.publishers || ['OReilly', 'Manning', 'Pearson'];
+  const layoutContainer = "w-full max-w-5xl mx-auto px-6 sm:px-8 lg:px-12";
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -139,71 +140,75 @@ export function AppLayout() {
         />
 
         {/* Chat area */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 pb-32">
           {!hasMessages ? (
             /* Empty state - Hero */
-            <div className="flex-1 flex flex-col items-center justify-center px-4 pb-32">
-              <div className="text-center mb-10 animate-fade-in">
-                {/* Animated logo */}
-                <div className="relative h-20 w-20 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-2xl gradient-sunset opacity-20 blur-xl animate-breathe" />
-                  <div className="relative h-full w-full rounded-2xl gradient-warm flex items-center justify-center glow-primary">
-                    <Sparkles className="h-9 w-9 text-white" />
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className={cn("w-full flex flex-col items-center space-y-12", layoutContainer)}>
+                <div className="flex flex-col items-center text-center animate-fade-in space-y-12">
+                  {/* Animated logo */}
+                  <div className="relative h-20 w-20 mx-auto">
+                    <div className="absolute inset-0 rounded-2xl gradient-sunset opacity-20 blur-xl animate-breathe" />
+                    <div className="relative h-full w-full rounded-2xl gradient-warm flex items-center justify-center glow-primary">
+                      <Sparkles className="h-9 w-9 text-white" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold gradient-sunset-text">
+                      Ask your library
+                    </h1>
+                    <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
+                      Get instant answers from O'Reilly, Manning, and Pearson technical books
+                    </p>
                   </div>
                 </div>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 gradient-sunset-text">
-                  Ask your library
-                </h1>
-                <p className="text-muted-foreground text-base sm:text-lg max-w-md mx-auto">
-                  Get instant answers from O'Reilly, Manning, and Pearson technical books
-                </p>
-              </div>
+                {/* Feature chips */}
+                <div className="flex flex-wrap justify-center gap-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
+                  {FEATURE_CHIPS.map((chip, i) => (
+                    <div
+                      key={chip.label}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-full glass-panel",
+                        "animate-gentle-float"
+                      )}
+                      style={{ animationDelay: `${i * 200}ms` }}
+                    >
+                      <chip.icon className={cn("h-4 w-4", chip.color)} />
+                      <span className="text-sm text-foreground/80">{chip.label}</span>
+                    </div>
+                  ))}
+                </div>
 
-              {/* Feature chips */}
-              <div className="flex flex-wrap justify-center gap-3 mb-10 animate-fade-in" style={{ animationDelay: '100ms' }}>
-                {FEATURE_CHIPS.map((chip, i) => (
-                  <div
-                    key={chip.label}
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-full glass-panel",
-                      "animate-gentle-float"
-                    )}
-                    style={{ animationDelay: `${i * 200}ms` }}
-                  >
-                    <chip.icon className={cn("h-4 w-4", chip.color)} />
-                    <span className="text-sm text-foreground/80">{chip.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Suggested queries */}
-              <div className="flex flex-wrap justify-center gap-2 max-w-2xl animate-fade-in" style={{ animationDelay: '200ms' }}>
-                {[
-                  'What are React best practices?',
-                  'Explain microservices architecture',
-                  'How does Docker networking work?',
-                ].map((query) => (
-                  <button
-                    key={query}
-                    onClick={() => handleSubmit(query)}
-                    disabled={!isReady}
-                    className={cn(
-                      "px-4 py-2 rounded-xl text-sm",
-                      "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
-                      "transition-all duration-300 hover:scale-[1.02]",
-                      !isReady && "cursor-not-allowed opacity-50 hover:scale-100"
-                    )}
-                  >
-                    {query}
-                  </button>
-                ))}
+                {/* Suggested queries */}
+                <div className="flex flex-wrap justify-center gap-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
+                  {[
+                    'What are React best practices?',
+                    'Explain microservices architecture',
+                    'How does Docker networking work?',
+                  ].map((query) => (
+                    <button
+                      key={query}
+                      onClick={() => handleSubmit(query)}
+                      disabled={!isReady}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-sm",
+                        "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
+                        "transition-all duration-300 hover:scale-[1.02]",
+                        !isReady && "cursor-not-allowed opacity-50 hover:scale-100"
+                      )}
+                    >
+                      {query}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           ) : (
             /* Chat messages */
             <ScrollArea className="flex-1">
-              <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+              <div className={cn("py-12 space-y-12", layoutContainer)}>
                 {messages.map((message) => (
                   <ChatMessage
                     key={message.id}
@@ -216,22 +221,21 @@ export function AppLayout() {
           )}
 
           {/* Input area */}
-          <div className={cn(
-            "py-4 border-t border-border/10 bg-background/50 backdrop-blur-xl",
-            !hasMessages && "absolute bottom-0 left-0 right-0 border-t-0 bg-transparent"
-          )}>
-            <ChatInput
-              onSubmit={handleSubmit}
-              isLoading={isLoading}
-              disabled={!isReady}
-              placeholder={
-                !isReady
-                  ? "Search will be available when the engine is ready..."
-                  : hasMessages
-                    ? "Ask a follow-up..."
-                    : "Ask about your technical library..."
-              }
-            />
+          <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/10 bg-background/80 backdrop-blur-xl">
+            <div className={cn("py-4", layoutContainer)}>
+              <ChatInput
+                onSubmit={handleSubmit}
+                isLoading={isLoading}
+                disabled={!isReady}
+                placeholder={
+                  !isReady
+                    ? "Search will be available when the engine is ready..."
+                    : hasMessages
+                      ? "Ask a follow-up..."
+                      : "Ask about your technical library..."
+                }
+              />
+            </div>
           </div>
         </div>
       </div>
