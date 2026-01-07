@@ -1,12 +1,18 @@
 import type { SearchFilters, SearchResponse, HealthResponse, EvidenceHit, Publisher } from './types';
 
 const API_BASE = (() => {
-  const configured = import.meta.env.VITE_API_URL || '';
-  if (configured) return configured;
+  const configured = (import.meta.env.VITE_API_URL || '').trim();
+  if (configured) return configured.replace(/\/+$/, '');
   if (import.meta.env.DEV) return 'http://localhost:8000';
   return '';
 })();
 const USE_MOCK = import.meta.env.VITE_USE_MOCKS === 'true';
+
+const buildApiUrl = (path: string) => {
+  if (!API_BASE) return path;
+  if (!path.startsWith('/')) return `${API_BASE}/${path}`;
+  return `${API_BASE}${path}`;
+};
 
 // Topic-based mock data for contextual responses
 const MOCK_DATA: Record<string, EvidenceHit[]> = {
@@ -358,7 +364,7 @@ const normalizeHealthResponse = (data: HealthResponse): HealthResponse => {
 export async function searchAPI(query: string, filters: SearchFilters): Promise<SearchResponse> {
   if (!USE_MOCK) {
     try {
-      const res = await fetch(`${API_BASE}/search`, {
+      const res = await fetch(buildApiUrl('/search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, ...filters }),
@@ -431,7 +437,7 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
 export async function fetchHealth(): Promise<HealthResponse> {
   if (!USE_MOCK) {
     try {
-      const res = await fetch(`${API_BASE}/health`);
+      const res = await fetch(buildApiUrl('/health'));
       if (!res.ok) throw new Error(`API error: ${res.status}`);
       const data = await res.json();
       return normalizeHealthResponse(data);
