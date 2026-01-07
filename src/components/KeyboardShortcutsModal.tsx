@@ -14,13 +14,6 @@ interface KeyboardShortcutsModalProps {
 const SHORTCUTS = [
   { category: 'Navigation', items: [
     { key: '/', description: 'Focus search' },
-    { key: '↑ / ↓', description: 'Navigate results' },
-    { key: 'Enter', description: 'Open selected result' },
-    { key: 'Esc', description: 'Close panel / Clear selection' },
-  ]},
-  { category: 'Actions', items: [
-    { key: 'p', description: 'Pin / Unpin selected' },
-    { key: 'c', description: 'Copy selected snippet' },
     { key: '?', description: 'Show shortcuts' },
   ]},
 ];

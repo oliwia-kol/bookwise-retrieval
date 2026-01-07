@@ -147,13 +147,7 @@ export function AppLayout() {
   }, []);
 
   // Keyboard shortcuts
-  const { showShortcuts, setShowShortcuts } = useKeyboardShortcuts({
-    hits: searchResult?.hits || [],
-    selectedHit: null,
-    onSelectHit: () => {},
-    onPinHit: () => {},
-    onClearSelection: () => {},
-  });
+  const { showShortcuts, setShowShortcuts } = useKeyboardShortcuts();
 
   const hasMessages = messages.length > 0;
 

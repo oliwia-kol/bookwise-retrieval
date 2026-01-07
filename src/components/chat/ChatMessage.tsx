@@ -10,10 +10,9 @@ import type { EvidenceHit } from '@/lib/types';
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  onSourceClick?: (sourceId: string) => void;
 }
 
-export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
+export function ChatMessage({ message }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
   const [selectedSource, setSelectedSource] = useState<EvidenceHit | null>(null);
   const isUser = message.role === 'user';
@@ -32,7 +31,6 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
 
   const handleSourceClick = (source: EvidenceHit) => {
     setSelectedSource(source);
-    onSourceClick?.(source.id);
   };
 
   if (message.isLoading) {
