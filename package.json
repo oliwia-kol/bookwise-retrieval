@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:codespaces": "node scripts/sync_codespaces_env.mjs --wait && vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync:codespaces-env": "node scripts/sync_codespaces_env.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
