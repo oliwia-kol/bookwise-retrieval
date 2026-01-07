@@ -231,11 +231,38 @@ class ChatRequest(BaseModel):
         return cleaned
 
 
+class HitResponse(BaseModel):
+    id: str
+    title: str
+    section: str
+    snippet: str
+    full_text: str
+    publisher: str
+    book: str
+    judge01: float = Field(ge=0.0, le=1.0)
+    sem_score_n: float = Field(ge=0.0, le=1.0)
+    lex_score_n: float = Field(ge=0.0, le=1.0)
+    tier: str
+    chunk_idx: int = Field(ge=-1)
+
+
+def _filter_valid_hits(hits: list) -> list:
+    if rag is None or not hasattr(rag, "validate_pub_hit"):
+        return hits
+    valid = []
+    for hit in hits:
+        if rag.validate_pub_hit(hit):
+            valid.append(hit)
+        else:
+            logging.warning("Dropping invalid hit payload: %s", hit)
+    return valid
+
+
 def _format_hit(hit: dict, idx: int) -> dict:
     """Format a hit for the React frontend."""
-    j = hit.get("j_score", hit.get("score", 0))
-    s = hit.get("s_score", hit.get("dense_score", 0))
-    l = hit.get("l_score", hit.get("lex_score", 0))
+    j = hit.get("judge01", hit.get("score", 0))
+    s = hit.get("sem_score_n", hit.get("sem_score", 0))
+    l = hit.get("lex_score_n", hit.get("lex_score", 0))
     
     # Determine tier based on judge score
     if j >= 0.7:
@@ -247,20 +274,21 @@ def _format_hit(hit: dict, idx: int) -> dict:
     else:
         tier = "Poor"
     
-    return {
+    payload = {
         "id": str(idx),
         "title": hit.get("title", hit.get("book", "Unknown")),
-        "section": hit.get("section", f"Chunk {hit.get('chunk_idx', idx)}"),
+        "section": hit.get("section", f"Chunk {hit.get('cidx', hit.get('chunk_idx', idx))}"),
         "snippet": hit.get("snippet", hit.get("text", "")[:200] + "..."),
         "full_text": hit.get("text", hit.get("snippet", "")),
         "publisher": hit.get("publisher", "Unknown"),
         "book": hit.get("book", "Unknown"),
-        "j_score": round(j, 2),
-        "s_score": round(s, 2),
-        "l_score": round(l, 2),
+        "judge01": round(j, 2),
+        "sem_score_n": round(s, 2),
+        "lex_score_n": round(l, 2),
         "tier": tier,
-        "chunk_idx": hit.get("chunk_idx", idx),
+        "chunk_idx": hit.get("chunk_idx", hit.get("cidx", idx)),
     }
+    return HitResponse.model_validate(payload).model_dump()
 
 
 def _format_hits(hits: list) -> list:
@@ -380,19 +408,19 @@ async def search(req: SearchRequest):
                     detail={"message": err_msg, "code": "EMPTY_CORPUS"},
                 )
 
-        hits = result.get("hits", [])
-        near_miss = result.get("near_miss", [])
+        hits = _filter_valid_hits(result.get("hits", []))
+        near_miss = _filter_valid_hits(result.get("near_miss", []))
         no_evidence = bool(result.get("no_evidence"))
         err_msg = (result.get("meta", {}) or {}).get("err", {}).get("msg")
         
         # Filter by jmin
-        filtered_hits = [h for h in hits if h.get("j_score", h.get("score", 0)) >= req.jmin]
+        filtered_hits = [h for h in hits if float(h.get("judge01", h.get("score", 0)) or 0.0) >= req.jmin]
         
         # Sort
         if req.sort == "Semantic":
-            filtered_hits.sort(key=lambda x: x.get("s_score", x.get("dense_score", 0)), reverse=True)
+            filtered_hits.sort(key=lambda x: x.get("sem_score_n", x.get("sem_score", 0)), reverse=True)
         else:
-            filtered_hits.sort(key=lambda x: x.get("j_score", x.get("score", 0)), reverse=True)
+            filtered_hits.sort(key=lambda x: x.get("judge01", x.get("score", 0)), reverse=True)
         
         # Calculate coverage
         count = len(filtered_hits)
@@ -407,7 +435,7 @@ async def search(req: SearchRequest):
         start = (req.page - 1) * req.page_size
         end = start + req.page_size
         paged_hits = filtered_hits[start:end]
-        confidence = filtered_hits[0].get("j_score", 0) if filtered_hits else 0
+        confidence = filtered_hits[0].get("judge01", 0) if filtered_hits else 0
         meta = result.get("meta", {}) or {}
         meta["pagination"] = {
             "page": req.page,
@@ -459,7 +487,7 @@ async def chat(req: ChatRequest):
         return {
             "ok": True,
             "answer": answer,
-            "sources": _format_hits(result.get("hits", [])[:3]),
+            "sources": _format_hits(_filter_valid_hits(result.get("hits", []))[:3]),
         }
     except Exception as e:
         logging.exception("Chat error")

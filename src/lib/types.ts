@@ -23,9 +23,9 @@ export interface EvidenceHit {
   full_text: string;
   publisher: Publisher;
   book: string;
-  j_score: number;
-  s_score: number;
-  l_score: number;
+  judge01: number;
+  sem_score_n: number;
+  lex_score_n: number;
   tier: JudgeTier;
   chunk_idx: number;
 }

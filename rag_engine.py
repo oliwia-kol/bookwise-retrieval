@@ -535,7 +535,7 @@ def _mk_eng(
             if db_ok:
                 dbp[k] = db_path
 
-            if ok_dense or db_ok:
+            if ok_dense and db_ok and dim_ok:
                 loaded[k] = p
 
             rep["dense_loaded"] = ok_dense
@@ -1247,8 +1247,14 @@ def get_startup_report(eng: Eng) -> Dict[str, Any]:
                 r.get("db_loaded"),
             ]
         )
-        ready = ready_lex
-        reason = "" if ready else (r.get("failure_reason") or "unavailable")
+        ready = ready_dense
+        if ready:
+            reason = ""
+        else:
+            if ready_lex and not ready_dense:
+                reason = r.get("failure_reason") or "dense index unavailable"
+            else:
+                reason = r.get("failure_reason") or "unavailable"
         row = {
             "publisher": pub,
             "ok": ready,
@@ -1597,6 +1603,67 @@ def _strip_internal(hs):
     return out
 
 
+def _coerce_str(val, default: str = "") -> str:
+    if val is None:
+        return default
+    return str(val)
+
+
+def _coerce_int(val, default: int = 0) -> int:
+    try:
+        return int(val)
+    except Exception:
+        return default
+
+
+def _coerce_float(val, default: float = 0.0) -> float:
+    try:
+        return float(val)
+    except Exception:
+        return default
+
+
+def _clamp01(val: float) -> float:
+    return max(0.0, min(1.0, float(val)))
+
+
+_HIT_REQUIRED_FIELDS = {
+    "cid": str,
+    "fp": str,
+    "sec": str,
+    "cidx": int,
+    "tx": str,
+    "corp": str,
+    "publisher": str,
+    "book": str,
+    "score": float,
+    "judge01": float,
+    "sem_score_n": float,
+    "lex_score_n": float,
+}
+
+
+def _validate_pub_hit_contract(hit: dict) -> bool:
+    if not isinstance(hit, dict):
+        return False
+    for key, typ in _HIT_REQUIRED_FIELDS.items():
+        if key not in hit:
+            return False
+        if not isinstance(hit[key], typ):
+            return False
+    if hit["cidx"] < -1:
+        return False
+    for key in ("score", "judge01", "sem_score_n", "lex_score_n"):
+        val = hit.get(key)
+        if val < 0.0 or val > 1.0:
+            return False
+    return True
+
+
+def validate_pub_hit(hit: dict) -> bool:
+    return _validate_pub_hit_contract(hit)
+
+
 def _pub_hit(h):
     if not isinstance(h, dict):
         return None
@@ -1604,20 +1671,43 @@ def _pub_hit(h):
     h2.pop("_tok", None)
     h2.pop("_jdg", None)
     # required UI keys with sane defaults
-    h2.setdefault("tx", h2.get("text") or "")
-    h2.setdefault("sec", h2.get("section") or "")
-    fp = h2.get("file") or h2.get("fp") or ""
-    h2["fp"] = fp
-    h2.setdefault("file", fp)
-    h2.setdefault("src", fp)
-    h2.setdefault("cid", h2.get("cid") or "")
-    h2.setdefault("cidx", h2.get("cidx") or 0)
-    h2.setdefault("score", float(h2.get("score", 0.0)))
-    h2.setdefault("judge01", h2.get("judge01", None))
-    h2["_jdg01"] = h2.get("judge01", None)
-    h2.setdefault("corp", h2.get("corp") or h2.get("publisher") or "")
-    h2.setdefault("publisher", h2.get("publisher") or h2.get("corp") or "")
-    h2.setdefault("book", h2.get("book") or (Path(fp).stem if fp else ""))
+    tx = _coerce_str(h2.get("tx") or h2.get("text") or "")
+    sec = _coerce_str(h2.get("sec") or h2.get("section") or "")
+    fp = _coerce_str(h2.get("file") or h2.get("fp") or "")
+    corp = _coerce_str(h2.get("corp") or h2.get("publisher") or "")
+    publisher = _coerce_str(h2.get("publisher") or h2.get("corp") or "")
+    book = _coerce_str(h2.get("book") or (Path(fp).stem if fp else ""))
+    cid = _coerce_str(h2.get("cid") or "")
+    cidx = _coerce_int(h2.get("cidx"), 0)
+    sem_score_n = _clamp01(_coerce_float(h2.get("sem_score_n", h2.get("sem_score", 0.0)), 0.0))
+    lex_score_n = _clamp01(_coerce_float(h2.get("lex_score_n", h2.get("lex_score", 0.0)), 0.0))
+    score = _clamp01(_coerce_float(h2.get("score", 0.0), 0.0))
+    judge01_raw = h2.get("judge01")
+    if judge01_raw is None:
+        judge01_raw = h2.get("_jdg01", score)
+    judge01 = _clamp01(_coerce_float(judge01_raw, score))
+
+    h2.update(
+        {
+            "tx": tx,
+            "sec": sec,
+            "fp": fp,
+            "file": fp,
+            "src": fp,
+            "cid": cid,
+            "cidx": cidx,
+            "corp": corp,
+            "publisher": publisher,
+            "book": book,
+            "score": score,
+            "judge01": judge01,
+            "_jdg01": judge01,
+            "sem_score_n": sem_score_n,
+            "lex_score_n": lex_score_n,
+        }
+    )
+    if not _validate_pub_hit_contract(h2):
+        return None
     return h2
 
 
