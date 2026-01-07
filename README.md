@@ -22,16 +22,20 @@ npm install
 npm run dev
 ```
 
-### 3. Codespaces
+### 3. Codespaces + Lovable Preview
 
 ```bash
 # Terminal 1: Backend
 source .venv/bin/activate
 uvicorn api_server:app --host 0.0.0.0 --port 8000
 
-# Terminal 2: Frontend (auto-detects Codespaces URL)
-npm run dev:codespaces
+# Terminal 2: Register backend URL (one-time per session)
+pip install supabase
+source .env
+python scripts/register_backend.py
 ```
+
+The Lovable preview will auto-discover the backend URL from the database.
 
 ---
 
