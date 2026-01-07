@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "description": "Representative offline evaluation questions with expected citations.",
+  "acceptance_criteria": {
+    "min_evidence_coverage": 0.7,
+    "max_false_positive_rate": 0.1,
+    "sla_latency_p95_s": 2.0,
+    "min_judge_strong_solid_rate": 0.3,
+    "min_corpus_ready": 1
+  },
+  "questions": [
+    {
+      "id": "oreilly-ai-engineering-surprise",
+      "question": "In the AI Engineering preface, what did the author say surprised them about ChatGPT's release?",
+      "expected_citations": [
+        {
+          "publisher": "OReilly",
+          "fp": "O’Reilly/epub/aiengineering.epub",
+          "sec": "preface01.html"
+        }
+      ],
+      "expect_abstain": false
+    },
+    {
+      "id": "oreilly-designing-llm-apps-part3",
+      "question": "According to the Designing Large Language Model Applications preface, which application paradigms are covered in the third part of the book?",
+      "expected_citations": [
+        {
+          "publisher": "OReilly",
+          "fp": "O’Reilly/epub/designinglargelanguagemodelapplications.epub",
+          "sec": "preface01.html"
+        }
+      ],
+      "expect_abstain": false
+    },
+    {
+      "id": "oreilly-developing-apps-llm-training-data",
+      "question": "In Developing Apps with GPT-4 and ChatGPT (chapter 1), what data sources are listed as examples for training LLMs?",
+      "expected_citations": [
+        {
+          "publisher": "OReilly",
+          "fp": "O’Reilly/epub/developingappswithgpt-4andchatgpt.epub",
+          "sec": "ch01.html"
+        }
+      ],
+      "expect_abstain": false
+    },
+    {
+      "id": "pearson-ai-business-parts",
+      "question": "In Artificial Intelligence for Business, what are the four major parts the book is divided into?",
+      "expected_citations": [
+        {
+          "publisher": "Pearson",
+          "fp": "Pearson/Artificial Intelligence for Business.pdf",
+          "sec": "page_0017"
+        }
+      ],
+      "expect_abstain": false
+    },
+    {
+      "id": "abstain-unanswerable-orbital-period",
+      "question": "What is the orbital period of Mars in hours?",
+      "expected_citations": [],
+      "expect_abstain": true
+    }
+  ]
+}

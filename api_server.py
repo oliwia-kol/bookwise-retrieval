@@ -412,7 +412,9 @@ async def search(req: SearchRequest):
         hits = _filter_valid_hits(result.get("hits", []))
         near_miss = _filter_valid_hits(result.get("near_miss", []))
         no_evidence = bool(result.get("no_evidence"))
-        err_msg = (result.get("meta", {}) or {}).get("err", {}).get("msg")
+        err = (result.get("meta", {}) or {}).get("err", {}) or {}
+        err_msg = err.get("msg")
+        err_id = err.get("id") or err.get("error_id")
         
         # Filter by jmin
         filtered_hits = [h for h in hits if float(h.get("judge01", h.get("score", 0)) or 0.0) >= req.jmin]
@@ -456,6 +458,7 @@ async def search(req: SearchRequest):
             "no_evidence": no_evidence,
             "meta": meta,
             "error": err_msg if not result_ok else None,
+            "error_id": err_id if not result_ok else None,
         }
     except (TimeoutError, asyncio.TimeoutError):
         raise HTTPException(

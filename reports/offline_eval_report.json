@@ -1,0 +1,229 @@
+{
+  "summary": {
+    "total_questions": 5,
+    "evidence_coverage": 0.5,
+    "abstention_accuracy": 0.8,
+    "false_positive_rate": 1.0,
+    "latency_mean_s": 0.0529,
+    "latency_p95_s": 0.0672,
+    "latency_max_s": 0.0672,
+    "judge_distribution": {
+      "Strong": 0,
+      "Solid": 0,
+      "Weak": 9,
+      "Poor": 0
+    },
+    "corpus_ready": [
+      "OReilly"
+    ],
+    "corpus_ready_count": 1,
+    "llm_used_count": 0,
+    "llm_abstained_count": 0
+  },
+  "per_question": [
+    {
+      "id": "oreilly-ai-engineering-surprise",
+      "question": "In the AI Engineering preface, what did the author say surprised them about ChatGPT's release?",
+      "no_evidence": false,
+      "expected_citations": [
+        {
+          "publisher": "OReilly",
+          "fp": "O\u2019Reilly/epub/aiengineering.epub",
+          "sec": "preface01.html"
+        }
+      ],
+      "matched_citations": 1,
+      "coverage": 1.0,
+      "latency_s": 0.0486
+    },
+    {
+      "id": "oreilly-designing-llm-apps-part3",
+      "question": "According to the Designing Large Language Model Applications preface, which application paradigms are covered in the third part of the book?",
+      "no_evidence": false,
+      "expected_citations": [
+        {
+          "publisher": "OReilly",
+          "fp": "O\u2019Reilly/epub/designinglargelanguagemodelapplications.epub",
+          "sec": "preface01.html"
+        }
+      ],
+      "matched_citations": 1,
+      "coverage": 1.0,
+      "latency_s": 0.0672
+    },
+    {
+      "id": "oreilly-developing-apps-llm-training-data",
+      "question": "In Developing Apps with GPT-4 and ChatGPT (chapter 1), what data sources are listed as examples for training LLMs?",
+      "no_evidence": false,
+      "expected_citations": [
+        {
+          "publisher": "OReilly",
+          "fp": "O\u2019Reilly/epub/developingappswithgpt-4andchatgpt.epub",
+          "sec": "ch01.html"
+        }
+      ],
+      "matched_citations": 0,
+      "coverage": 0.0,
+      "latency_s": 0.0581
+    },
+    {
+      "id": "pearson-ai-business-parts",
+      "question": "In Artificial Intelligence for Business, what are the four major parts the book is divided into?",
+      "no_evidence": false,
+      "expected_citations": [
+        {
+          "publisher": "Pearson",
+          "fp": "Pearson/Artificial Intelligence for Business.pdf",
+          "sec": "page_0017"
+        }
+      ],
+      "matched_citations": 0,
+      "coverage": 0.0,
+      "latency_s": 0.0535
+    },
+    {
+      "id": "abstain-unanswerable-orbital-period",
+      "question": "What is the orbital period of Mars in hours?",
+      "no_evidence": false,
+      "expected_citations": [],
+      "matched_citations": 0,
+      "coverage": null,
+      "latency_s": 0.0372
+    }
+  ],
+  "corpus_report": {
+    "rows": [
+      {
+        "publisher": "OReilly",
+        "ok": true,
+        "loaded": true,
+        "loaded_dense": true,
+        "loaded_db": true,
+        "ready": true,
+        "ready_dense": true,
+        "ready_lex": true,
+        "reason": "",
+        "exists": true,
+        "manifest": true,
+        "dim_ok": true,
+        "missing": [],
+        "reasons": []
+      },
+      {
+        "publisher": "Manning",
+        "ok": false,
+        "loaded": true,
+        "loaded_dense": false,
+        "loaded_db": true,
+        "ready": false,
+        "ready_dense": false,
+        "ready_lex": true,
+        "reason": "index load error: RuntimeError",
+        "exists": true,
+        "manifest": true,
+        "dim_ok": false,
+        "missing": [],
+        "reasons": [
+          "index load error: RuntimeError"
+        ]
+      },
+      {
+        "publisher": "Pearson",
+        "ok": false,
+        "loaded": true,
+        "loaded_dense": false,
+        "loaded_db": true,
+        "ready": false,
+        "ready_dense": false,
+        "ready_lex": true,
+        "reason": "index load error: RuntimeError",
+        "exists": true,
+        "manifest": true,
+        "dim_ok": false,
+        "missing": [],
+        "reasons": [
+          "index load error: RuntimeError"
+        ]
+      }
+    ],
+    "ok": [
+      "OReilly"
+    ],
+    "fail": [
+      "Manning",
+      "Pearson"
+    ],
+    "by_corpus": {
+      "OReilly": {
+        "publisher": "OReilly",
+        "ok": true,
+        "loaded": true,
+        "loaded_dense": true,
+        "loaded_db": true,
+        "ready": true,
+        "ready_dense": true,
+        "ready_lex": true,
+        "reason": "",
+        "exists": true,
+        "manifest": true,
+        "dim_ok": true,
+        "missing": [],
+        "reasons": []
+      },
+      "Manning": {
+        "publisher": "Manning",
+        "ok": false,
+        "loaded": true,
+        "loaded_dense": false,
+        "loaded_db": true,
+        "ready": false,
+        "ready_dense": false,
+        "ready_lex": true,
+        "reason": "index load error: RuntimeError",
+        "exists": true,
+        "manifest": true,
+        "dim_ok": false,
+        "missing": [],
+        "reasons": [
+          "index load error: RuntimeError"
+        ]
+      },
+      "Pearson": {
+        "publisher": "Pearson",
+        "ok": false,
+        "loaded": true,
+        "loaded_dense": false,
+        "loaded_db": true,
+        "ready": false,
+        "ready_dense": false,
+        "ready_lex": true,
+        "reason": "index load error: RuntimeError",
+        "exists": true,
+        "manifest": true,
+        "dim_ok": false,
+        "missing": [],
+        "reasons": [
+          "index load error: RuntimeError"
+        ]
+      }
+    }
+  },
+  "acceptance": {
+    "criteria": {
+      "min_evidence_coverage": 0.7,
+      "max_false_positive_rate": 0.1,
+      "sla_latency_p95_s": 2.0,
+      "min_judge_strong_solid_rate": 0.3,
+      "min_corpus_ready": 1
+    },
+    "checks": {
+      "coverage_ok": false,
+      "false_positive_ok": false,
+      "latency_ok": true,
+      "judge_rate_ok": false,
+      "corpus_ready_ok": true
+    },
+    "judge_strong_solid_rate": 0.0,
+    "all_pass": false
+  }
+}
