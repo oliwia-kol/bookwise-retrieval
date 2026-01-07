@@ -53,8 +53,9 @@ def test_search_valid_query_returns_hits(api_client, api_server_module, monkeypa
             "hits": [
                 {
                     "title": "Hit",
-                    "j_score": 0.7,
-                    "s_score": 0.2,
+                    "judge01": 0.7,
+                    "sem_score_n": 0.2,
+                    "lex_score_n": 0.1,
                     "text": "hit one",
                     "publisher": "Pub",
                     "book": "Book One",
@@ -97,8 +98,9 @@ def test_search_jmin_filter(api_client, api_server_module, monkeypatch):
             "hits": [
                 {
                     "title": "Low",
-                    "j_score": 0.2,
-                    "s_score": 0.2,
+                    "judge01": 0.2,
+                    "sem_score_n": 0.2,
+                    "lex_score_n": 0.1,
                     "text": "low",
                     "publisher": "Pub",
                     "book": "Book One",
@@ -106,8 +108,9 @@ def test_search_jmin_filter(api_client, api_server_module, monkeypatch):
                 },
                 {
                     "title": "High",
-                    "j_score": 0.9,
-                    "s_score": 0.3,
+                    "judge01": 0.9,
+                    "sem_score_n": 0.3,
+                    "lex_score_n": 0.2,
                     "text": "high",
                     "publisher": "Pub",
                     "book": "Book Two",
@@ -139,8 +142,9 @@ def test_chat_endpoint(api_client, api_server_module, monkeypatch):
             "hits": [
                 {
                     "title": "Chat",
-                    "j_score": 0.8,
-                    "s_score": 0.6,
+                    "judge01": 0.8,
+                    "sem_score_n": 0.6,
+                    "lex_score_n": 0.4,
                     "text": "chat hit",
                     "publisher": "Pub",
                     "book": "Chat Book",

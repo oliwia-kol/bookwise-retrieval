@@ -8,8 +8,9 @@ def test_end_to_end_query_flow(api_client, api_server_module, monkeypatch):
             "hits": [
                 {
                     "title": "Flow",
-                    "j_score": 0.9,
-                    "s_score": 0.4,
+                    "judge01": 0.9,
+                    "sem_score_n": 0.4,
+                    "lex_score_n": 0.2,
                     "text": "flow hit",
                     "publisher": "Pub",
                     "book": "Flow Book",
@@ -76,8 +77,9 @@ def test_edge_cases_all_filtered(api_client, api_server_module, monkeypatch):
             "hits": [
                 {
                     "title": "Low",
-                    "j_score": 0.1,
-                    "s_score": 0.2,
+                    "judge01": 0.1,
+                    "sem_score_n": 0.2,
+                    "lex_score_n": 0.1,
                     "text": "low",
                     "publisher": "Pub",
                     "book": "Book One",
