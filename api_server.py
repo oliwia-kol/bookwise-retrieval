@@ -284,7 +284,12 @@ def _compose_chat_answer(query: str, result: dict) -> str:
     ]
     if len(positional_params) <= 1:
         return generate_answer(result)
-    return generate_answer(query, result.get("hits", []), result.get("answer"))
+    kwargs = {}
+    if any(p.name == "no_evidence" for p in params):
+        kwargs["no_evidence"] = result.get("no_evidence", False)
+    if any(p.name == "coverage" for p in params):
+        kwargs["coverage"] = result.get("coverage")
+    return generate_answer(query, result.get("hits", []), result.get("answer"), **kwargs)
 
 
 @app.get("/health")
@@ -359,7 +364,8 @@ async def search(req: SearchRequest):
             mode=req.mode,
         )
 
-        if not result.get("ok", True):
+        result_ok = result.get("ok", True)
+        if not result_ok:
             meta = result.get("meta", {}) or {}
             err = meta.get("err") or {}
             err_msg = err.get("msg")
@@ -376,6 +382,8 @@ async def search(req: SearchRequest):
 
         hits = result.get("hits", [])
         near_miss = result.get("near_miss", [])
+        no_evidence = bool(result.get("no_evidence"))
+        err_msg = (result.get("meta", {}) or {}).get("err", {}).get("msg")
         
         # Filter by jmin
         filtered_hits = [h for h in hits if h.get("j_score", h.get("score", 0)) >= req.jmin]
@@ -409,14 +417,16 @@ async def search(req: SearchRequest):
         }
         
         return {
-            "ok": True,
+            "ok": bool(result_ok),
             "query": req.query,
             "hits": _format_hits(paged_hits),
             "near_miss": _format_hits(near_miss) if req.show_near_miss else [],
             "coverage": coverage,
             "confidence": round(confidence, 2),
-            "answer": result.get("answer"),
+            "answer": result.get("answer") or "",
+            "no_evidence": no_evidence,
             "meta": meta,
+            "error": err_msg if not result_ok else None,
         }
     except (TimeoutError, asyncio.TimeoutError):
         raise HTTPException(

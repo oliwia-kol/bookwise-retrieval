@@ -1367,6 +1367,10 @@ def _jdg_cache_set(key: Tuple[str, str], score: float):
     _jdg_cache_prune()
 
 
+class RealJudgeUnavailableError(RuntimeError):
+    """Raised when real judge mode is requested but unavailable."""
+
+
 def _jdg_rerank(q, hs, mode: str = "proxy"):
     mode = (mode or "proxy").lower()
     if mode not in {"real", "proxy", "off"}:
@@ -1399,6 +1403,8 @@ def _jdg_rerank(q, hs, mode: str = "proxy"):
     use_real = mode == "real"
     j = _get_jdg() if use_real else None
     if j is None:
+        if use_real:
+            raise RealJudgeUnavailableError("Real judge unavailable")
         return _proxy("local_judge_v1", True)
 
     tp = hs[: min(K_JDG, len(hs))]
@@ -1426,7 +1432,9 @@ def _jdg_rerank(q, hs, mode: str = "proxy"):
             t_pred += time.time() - t_pred0
             sc.append(scr)
             _jdg_cache_set(key, scr)
-    except Exception:
+    except Exception as exc:
+        if use_real:
+            raise RealJudgeUnavailableError("Real judge unavailable") from exc
         return _proxy("local_judge_v1", True)
     t1 = time.time()
     for h, s in zip(tp, sc):
@@ -2089,7 +2097,21 @@ def run_query(
         disp_use_jdg = False
         t_rerank = _t0()
         if use_jdg_flag:
-            hs2, meta_jdg = _jdg_rerank(q, hs2, mode=jdg_mode)
+            try:
+                hs2, meta_jdg = _jdg_rerank(q, hs2, mode=jdg_mode)
+            except RealJudgeUnavailableError as exc:
+                msg = _safe_msg(exc) or "Real judge unavailable"
+                err_id = _err_id(msg)
+                meta["err"] = {"where": "judge_rerank", "msg": msg, "id": err_id, "error_id": err_id}
+                meta["t"]["total"] = _dt(t_total)
+                meta["flags"]["llm_bypassed"] = True
+                meta["flags"]["llm_used"] = False
+                meta["err_llm"] = None
+                meta["cap"]["judge_ok"] = False
+                meta["cap"]["judge_kind"] = "real"
+                meta["flags"]["judge_proxy"] = False
+                _log_event(meta, mode_name, pubs or list(getattr(e, "corp", {}).keys()), len(q_clean or q or ""))
+                return _mk_ret(ok=False, no_ev=True, hits=[], nm_hits=[], cov="WEAK", ans="", meta=meta)
             meta["t"]["rerank"] = _dt(t_rerank)
             disp_use_jdg = bool(meta_jdg.get("ok"))
             meta["cap"]["judge_ok"] = disp_use_jdg
@@ -2311,7 +2333,13 @@ def run_queries(
 # Chat answer composition
 # ---------------------------------------------------------------------------
 
-def generate_answer(query: str, hits: list, answer: str | None = None) -> str:
+def generate_answer(
+    query: str,
+    hits: list,
+    answer: str | None = None,
+    no_evidence: bool = False,
+    coverage: str | None = None,
+) -> str:
     """
     Summarise search hits into a natural language reply for the chat.
 
@@ -2319,12 +2347,17 @@ def generate_answer(query: str, hits: list, answer: str | None = None) -> str:
         query: Original user question.
         hits: List of search result dictionaries returned by ``run_query``.
         answer: Optional answer string already produced by the engine.
+        no_evidence: True when the engine could not find direct evidence.
+        coverage: Coverage label string from the retrieval engine.
 
     Returns:
         A human-friendly answer.  If ``answer`` is supplied, it is returned
         directly.  Otherwise a simple listing of the top three hit titles and
         sections is returned as a placeholder.
     """
+    coverage_label = (coverage or "").strip().upper()
+    if no_evidence or coverage_label == "WEAK":
+        return "Abstain — no direct evidence to answer confidently."
     # Use existing answer if provided
     if answer:
         return answer
