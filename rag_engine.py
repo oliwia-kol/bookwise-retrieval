@@ -18,10 +18,19 @@ from functools import lru_cache
 from logging.handlers import RotatingFileHandler
 from statistics import pstdev
 
-import faiss
+try:
+    import faiss
+except Exception as e:
+    faiss = None
+    logging.warning("faiss not available: %s", e)
 import numpy as np
-from sentence_transformers import SentenceTransformer
-from sentence_transformers import CrossEncoder
+try:
+    from sentence_transformers import SentenceTransformer
+    from sentence_transformers import CrossEncoder
+except Exception as e:
+    SentenceTransformer = None
+    CrossEncoder = None
+    logging.warning("sentence-transformers not available: %s", e)
 
 # -----------------------------
 # -----------------------------
@@ -226,7 +235,7 @@ HCFG = {
 
 FTS_CFG = {"batch": 4000, "use_porter": False}
 
-USE_JDG_DEFAULT = True
+USE_JDG_DEFAULT = os.getenv("RAG_USE_JDG", "1").strip().lower() not in {"0", "false", "no"}
 K_SHOW = 18
 MNK = 4
 ABS_MN = 0.30
@@ -453,7 +462,7 @@ def _mk_eng(
     ready: Dict[str, Path] = {k: p for k, p in c2p.items() if reports.get(k, {}).get("ok")}
 
     emb: Optional[SentenceTransformer] = None
-    if emb_model:
+    if emb_model and SentenceTransformer is not None:
         local_only = os.getenv("RAG_EMBED_LOCAL_ONLY", "").strip().lower() in {"1", "true", "yes"}
         try:
             if local_only:
@@ -462,6 +471,8 @@ def _mk_eng(
                 emb = SentenceTransformer(emb_model)
         except Exception:
             emb = None
+    elif emb_model and SentenceTransformer is None:
+        logging.warning("SentenceTransformer unavailable; embedding disabled.")
     emb_dim = None
     try:
         emb_dim = int(emb.get_sentence_embedding_dimension()) if emb is not None else None
@@ -487,30 +498,47 @@ def _mk_eng(
         rep.setdefault("failure_reason", None)
 
         if k in ready:
-            try:
-                rd = faiss.read_index(str(p / "index.faiss"))
-                dims[k] = int(rd.d)
-                rep["ix_dim"] = dims.get(k)
-                if emb_dim is not None and dims[k] != emb_dim:
-                    dim_ok = False
-                    failure_reason = f"dim mismatch: emb {emb_dim} vs ix {dims[k]}"
-                else:
-                    ix[k] = rd
-                    ok_dense = True
-            except Exception as e:
+            if faiss is None:
                 dim_ok = False
-                failure_reason = f"index load error: {type(e).__name__}"
+                failure_reason = "faiss unavailable"
+            else:
+                try:
+                    rd = faiss.read_index(str(p / "index.faiss"))
+                    dims[k] = int(rd.d)
+                    rep["ix_dim"] = dims.get(k)
+                    if emb_dim is not None and dims[k] != emb_dim:
+                        dim_ok = False
+                        failure_reason = f"dim mismatch: emb {emb_dim} vs ix {dims[k]}"
+                    else:
+                        ix[k] = rd
+                        ok_dense = True
+                except Exception as e:
+                    dim_ok = False
+                    failure_reason = f"index load error: {type(e).__name__}"
 
             db_path = p / "meta.sqlite"
             db_exists = db_path.exists()
+            db_ok = False
             if db_exists:
+                try:
+                    con = _db(db_path)
+                    db_ok = fts_ready(con)
+                except sqlite3.DatabaseError as e:
+                    failure_reason = failure_reason or f"metadata db error: {type(e).__name__}"
+                    db_ok = False
+                finally:
+                    try:
+                        con.close()
+                    except Exception:
+                        pass
+            if db_ok:
                 dbp[k] = db_path
 
-            if ok_dense or db_exists:
+            if ok_dense or db_ok:
                 loaded[k] = p
 
             rep["dense_loaded"] = ok_dense
-            rep["db_loaded"] = db_exists
+            rep["db_loaded"] = db_ok
             rep["dim_ok"] = dim_ok
             rep["embed_dim"] = emb_dim
 
@@ -784,6 +812,8 @@ def embed_queries(e: Eng, qs: List[str], metas: Optional[List[Optional[Dict[str,
 
 
 def _normalize_query(qv: np.ndarray) -> np.ndarray:
+    if faiss is None:
+        return qv
     try:
         v = np.asarray(qv, dtype="float32")
         faiss.normalize_L2(v.reshape(1, -1))
@@ -800,6 +830,8 @@ def faiss_search(e: Eng, corp: str, qv: np.ndarray, k: int):
         "clamped_k": False,
         "k_requested": k,
     }
+    if faiss is None:
+        return [], meta
     if qv.size == 0:
         return [], meta
     if corp not in e.ix or corp not in e.dbp:
@@ -865,6 +897,9 @@ def faiss_search(e: Eng, corp: str, qv: np.ndarray, k: int):
             rows = cur.execute(f"SELECT cid, fp, sec, cidx, tx, i64 FROM chunks WHERE i64 IN ({ph})", wanted_ids).fetchall()
             i64_to_row = {int(r[5]): r for r in rows}
             missing_ids = [i for i in wanted_ids if int(i) not in i64_to_row]
+        except sqlite3.DatabaseError as e:
+            logger.warning("faiss metadata lookup failed for %s: %s", corp, e)
+            return [], meta
         except Exception:
             i64_to_row = {}
             missing_ids = wanted_ids
@@ -872,7 +907,11 @@ def faiss_search(e: Eng, corp: str, qv: np.ndarray, k: int):
         fallback_budget = max(0, int(HCFG.get("fallback_retry_max", FAISS_FALLBACK_RETRY_MAX)))
         for i64 in missing_ids[:fallback_budget]:
             meta["fallback_retries"] += 1
-            row = get_by_i64(con, int(i64))
+            try:
+                row = get_by_i64(con, int(i64))
+            except sqlite3.DatabaseError as e:
+                logger.warning("faiss fallback lookup failed for %s: %s", corp, e)
+                return [], meta
             if row:
                 cid, fp, sec, cidx, tx = row
                 i64_to_row[int(i64)] = (cid, fp, sec, cidx, tx, i64)
@@ -919,16 +958,20 @@ def fts_search(e: Eng, corp: str, q: str, k: int):
             return []
         k = max(1, min(int(k), HCFG["fts_fetch_k"]))
 
-        rows = cur.execute(
-            """
-            SELECT cid, fp, sec, tx, bm25(chunks_fts) as b
-            FROM chunks_fts
-            WHERE chunks_fts MATCH ?
-            ORDER BY b
-            LIMIT ?
-            """,
-            (qq, k),
-        ).fetchall()
+        try:
+            rows = cur.execute(
+                """
+                SELECT cid, fp, sec, tx, bm25(chunks_fts) as b
+                FROM chunks_fts
+                WHERE chunks_fts MATCH ?
+                ORDER BY b
+                LIMIT ?
+                """,
+                (qq, k),
+            ).fetchall()
+        except sqlite3.DatabaseError as e:
+            logger.warning("fts search failed for %s: %s", corp, e)
+            return []
 
         out = []
         # bm25 smaller is better; convert to a "lex_score" where higher is better
@@ -977,7 +1020,11 @@ def lex_retrieve(e: Eng, corp: str, q: str, k: int | None = None):
     if k_use > HCFG["fts_fetch_k"]:
         clamp_flag = True
         k_use = HCFG["fts_fetch_k"]
-    rows = fts_search(e, corp, q, k_use)
+    try:
+        rows = fts_search(e, corp, q, k_use)
+    except Exception as e:
+        logger.warning("lexical search failed for %s: %s", corp, e)
+        rows = []
     norm_scores(rows, "lex_score")
     for r in rows:
         r.setdefault("score", r.get("lex_score_n", 0.0))
@@ -1180,7 +1227,7 @@ def get_startup_report(eng: Eng) -> Dict[str, Any]:
     by_corpus = {}
     for pub in CORP.keys():
         r = rep.get(pub, {})
-        ready = all(
+        ready_dense = all(
             [
                 r.get("exists"),
                 r.get("faiss"),
@@ -1191,14 +1238,25 @@ def get_startup_report(eng: Eng) -> Dict[str, Any]:
                 r.get("dim_ok"),
             ]
         )
+        ready_lex = all(
+            [
+                r.get("exists"),
+                r.get("db"),
+                r.get("manifest"),
+                r.get("db_loaded"),
+            ]
+        )
+        ready = ready_lex
         reason = "" if ready else (r.get("failure_reason") or "unavailable")
         row = {
             "publisher": pub,
             "ok": ready,
-            "loaded": bool(r.get("dense_loaded") and r.get("db_loaded") and r.get("dim_ok")),
+            "loaded": bool(r.get("db_loaded")),
             "loaded_dense": bool(r.get("dense_loaded")),
             "loaded_db": bool(r.get("db_loaded")),
             "ready": bool(ready),
+            "ready_dense": bool(ready_dense),
+            "ready_lex": bool(ready_lex),
             "reason": reason,
             "exists": bool(r.get("exists")),
             "manifest": bool(r.get("manifest")),
@@ -1253,6 +1311,8 @@ def _get_jdg():
     tolerated to keep the system usable in CPU-only environments.
     """
 
+    if CrossEncoder is None:
+        return None
     model_name = os.environ.get("RAG_JUDGE_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
     try:
         return CrossEncoder(model_name)
@@ -1314,7 +1374,10 @@ def _jdg_rerank(q, hs, mode: str = "proxy"):
 
     def _proxy(label: str, proxy_flag: bool):
         for h in hs:
-            js = float(h.get("score", 0.0))
+            sem = float(h.get("sem_score_n", 0.0) or 0.0)
+            lex = float(h.get("lex_score_n", 0.0) or 0.0)
+            base = float(h.get("score", 0.0) or 0.0)
+            js = max(base, (0.6 * sem) + (0.4 * lex))
             h["_jdg"] = js
             h["judge01"] = js
         hs.sort(key=lambda x: float(x.get("judge01", 0.0)), reverse=True)
@@ -1336,7 +1399,7 @@ def _jdg_rerank(q, hs, mode: str = "proxy"):
     use_real = mode == "real"
     j = _get_jdg() if use_real else None
     if j is None:
-        return _proxy("proxy_score", True)
+        return _proxy("local_judge_v1", True)
 
     tp = hs[: min(K_JDG, len(hs))]
     pairs = [(q, (h.get("text") or "")[:1200]) for h in tp]
@@ -1364,7 +1427,7 @@ def _jdg_rerank(q, hs, mode: str = "proxy"):
             sc.append(scr)
             _jdg_cache_set(key, scr)
     except Exception:
-        return _proxy("proxy_score", True)
+        return _proxy("local_judge_v1", True)
     t1 = time.time()
     for h, s in zip(tp, sc):
         h["_jdg"] = float(s)
@@ -1819,7 +1882,8 @@ def run_query(
     meta["log"]["mode_description"] = mode_cfg["description"]
     meta["log"]["mode_cfg"] = mode_cfg
     use_jdg_flag = (mode_cfg.get("use_jdg", True) if use_jdg is None else bool(use_jdg)) and USE_JDG_DEFAULT
-    jdg_mode = (judge_mode or jdg_mode or "real").lower()
+    default_jdg_mode = os.getenv("RAG_JUDGE_MODE", "proxy")
+    jdg_mode = (judge_mode or jdg_mode or default_jdg_mode).lower()
     if jdg_mode not in {"real", "proxy", "off"}:
         jdg_mode = "proxy"
     if (not use_jdg_flag) or jdg_mode == "off":
