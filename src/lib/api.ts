@@ -1,17 +1,58 @@
 import type { SearchFilters, SearchResponse, HealthResponse, EvidenceHit, Publisher } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
-const API_BASE = (() => {
+let _cachedApiBase: string | null = null;
+
+async function getApiBase(): Promise<string> {
+  // Return cached value if available
+  if (_cachedApiBase !== null) return _cachedApiBase;
+
+  // Check env var first
   const configured = (import.meta.env.VITE_API_URL || '').trim();
-  if (configured) return configured.replace(/\/+$/, '');
-  if (import.meta.env.DEV) return 'http://localhost:8000';
-  return '';
-})();
+  if (configured) {
+    _cachedApiBase = configured.replace(/\/+$/, '');
+    return _cachedApiBase;
+  }
+
+  // Try to fetch from database
+  try {
+    const { data, error } = await supabase
+      .from('backend_config')
+      .select('api_url')
+      .eq('id', 'default')
+      .maybeSingle();
+
+    if (!error && data?.api_url) {
+      _cachedApiBase = data.api_url.replace(/\/+$/, '');
+      console.log('[API] Using backend URL from database:', _cachedApiBase);
+      return _cachedApiBase;
+    }
+  } catch (err) {
+    console.warn('[API] Failed to fetch backend config:', err);
+  }
+
+  // Fallback to localhost in dev
+  if (import.meta.env.DEV) {
+    _cachedApiBase = 'http://localhost:8000';
+    return _cachedApiBase;
+  }
+
+  _cachedApiBase = '';
+  return _cachedApiBase;
+}
+
+// Force refresh of cached API base (call when URL might have changed)
+export function clearApiBaseCache() {
+  _cachedApiBase = null;
+}
+
 const USE_MOCK = import.meta.env.VITE_USE_MOCKS === 'true';
 
-const buildApiUrl = (path: string) => {
-  if (!API_BASE) return path;
-  if (!path.startsWith('/')) return `${API_BASE}/${path}`;
-  return `${API_BASE}${path}`;
+const buildApiUrl = async (path: string): Promise<string> => {
+  const base = await getApiBase();
+  if (!base) return path;
+  if (!path.startsWith('/')) return `${base}/${path}`;
+  return `${base}${path}`;
 };
 
 // Topic-based mock data for contextual responses
@@ -364,7 +405,8 @@ const normalizeHealthResponse = (data: HealthResponse): HealthResponse => {
 export async function searchAPI(query: string, filters: SearchFilters): Promise<SearchResponse> {
   if (!USE_MOCK) {
     try {
-      const res = await fetch(buildApiUrl('/search'), {
+      const url = await buildApiUrl('/search');
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, ...filters }),
@@ -437,7 +479,8 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
 export async function fetchHealth(): Promise<HealthResponse> {
   if (!USE_MOCK) {
     try {
-      const res = await fetch(buildApiUrl('/health'));
+      const url = await buildApiUrl('/health');
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`API error: ${res.status}`);
       const data = await res.json();
       return normalizeHealthResponse(data);
@@ -469,4 +512,4 @@ export async function fetchHealth(): Promise<HealthResponse> {
   });
 }
 
-export { API_BASE };
+export { getApiBase };
