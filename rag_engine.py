@@ -64,6 +64,17 @@ RECENT_QUERY_LOG = Path(os.environ.get("RAG_RECENT_QUERY_LOG", LOG_PATH.parent /
 
 CTX_CLAMP_MARKER = "... [ctx-clamped]"
 LLM_CLAMP_MARKER = "... [llm-clamped]"
+LLM_ABSTAIN = "ABSTAIN"
+
+LLM_MIN_JUDGE = float(os.environ.get("RAG_LLM_MIN_JUDGE", "0.6"))
+LLM_MIN_COVERAGE = os.environ.get("RAG_LLM_MIN_COVERAGE", "OK").strip().upper()
+LLM_RESPONSE_FIELD = os.environ.get("RAG_LLM_RESPONSE_FIELD", "text").strip()
+LLM_ENDPOINT = os.environ.get("RAG_LLM_ENDPOINT", "").strip()
+LLM_API_KEY = os.environ.get("RAG_LLM_API_KEY", "").strip()
+LLM_MODEL = os.environ.get("RAG_LLM_MODEL", "").strip()
+LLM_TIMEOUT = float(os.environ.get("RAG_LLM_TIMEOUT", "30"))
+
+COVERAGE_RANK = {"WEAK": 0, "OK": 1, "DISTRIBUTED": 2, "HIGH": 3}
 
 
 def _config_logger():
@@ -130,6 +141,10 @@ def _clamp_text(txt: str, char_budget: Optional[int], tok_budget: Optional[int],
                 combined = marker_txt[:char_budget]
         t = combined
     return t, {"char_clamped": char_clamped, "token_clamped": tok_clamped}
+
+
+def _coverage_rank(label: str | None) -> int:
+    return COVERAGE_RANK.get((label or "").strip().upper(), 0)
 
 CORP = {
     "OReilly": BASE_OUT / "OReilly",
@@ -1784,16 +1799,50 @@ def _assemble_context(dr, budget_chars: int = 1400, budget_tokens: int = 380) ->
 
 
 def llm_call(prompt: str, cfg: Optional[dict] = None) -> str:
-    # placeholder CPU-friendly stub; can be replaced with real model later
     if not prompt:
         return ""
+    if not LLM_ENDPOINT:
+        raise RuntimeError("LLM disabled: set RAG_LLM_ENDPOINT to enable")
     cfg = cfg or {}
     mode = (cfg.get("mode") or "quick") if isinstance(cfg, dict) else "quick"
     b = _budget_for_mode(mode, {})
     char_budget = int(cfg.get("char_budget", b.get("prompt_chars", 900)))
     tok_budget = int(cfg.get("tok_budget", b.get("prompt_tokens", 220)))
     p, _ = _clamp_text(prompt, char_budget, tok_budget, LLM_CLAMP_MARKER)
-    return p
+    payload = {"prompt": p, "mode": mode}
+    if LLM_MODEL:
+        payload["model"] = LLM_MODEL
+    headers = {"Content-Type": "application/json"}
+    if LLM_API_KEY:
+        headers["Authorization"] = f"Bearer {LLM_API_KEY}"
+    try:
+        import httpx
+    except Exception as exc:
+        raise RuntimeError("httpx required for LLM calls") from exc
+    with httpx.Client(timeout=LLM_TIMEOUT) as client:
+        resp = client.post(LLM_ENDPOINT, json=payload, headers=headers)
+        resp.raise_for_status()
+        data = resp.json() if resp.content else {}
+    if isinstance(data, dict):
+        if LLM_RESPONSE_FIELD and LLM_RESPONSE_FIELD in data:
+            return str(data.get(LLM_RESPONSE_FIELD) or "").strip()
+        if "answer" in data:
+            return str(data.get("answer") or "").strip()
+        if "output" in data:
+            return str(data.get("output") or "").strip()
+        choices = data.get("choices")
+        if isinstance(choices, list) and choices:
+            choice = choices[0] or {}
+            if isinstance(choice, dict):
+                text = choice.get("text")
+                if text is not None:
+                    return str(text).strip()
+                message = choice.get("message") or {}
+                if isinstance(message, dict):
+                    content = message.get("content")
+                    if content is not None:
+                        return str(content).strip()
+    raise RuntimeError("LLM response missing expected output field")
 
 
 def get_reader_chunk(e: Eng, fp: str, cidx: int, window: int = 2):
@@ -2266,6 +2315,35 @@ def run_query(
             t_llm = _t0()
             ans_txt = ""
             if use_llm:
+                jmax = max((float(h.get("judge01", 0.0)) for h in dr), default=0.0)
+                llm_gate_ok = (jmax >= LLM_MIN_JUDGE) and (
+                    _coverage_rank(cov) >= _coverage_rank(LLM_MIN_COVERAGE)
+                )
+                meta["cap"]["llm_gate"] = {
+                    "ok": llm_gate_ok,
+                    "judge_max": jmax,
+                    "judge_min": LLM_MIN_JUDGE,
+                    "coverage": cov,
+                    "coverage_min": LLM_MIN_COVERAGE,
+                }
+                if not llm_gate_ok:
+                    ans_txt = LLM_ABSTAIN
+                    meta["flags"]["llm_abstained"] = True
+                    meta["flags"]["llm_used"] = False
+                    meta["flags"]["llm_bypassed"] = True
+                    meta["err_llm"] = None
+                    meta["t"]["llm"] = _dt(t_llm)
+                    meta["t"]["total"] = _dt(t_total)
+                    _log_event(meta, mode_name, pubs or list(getattr(e, "corp", {}).keys()), len(q), hits=dr)
+                    return _mk_ret(
+                        ok=True,
+                        no_ev=False,
+                        hits=_pub_hits(dr),
+                        nm_hits=[],
+                        cov=cov,
+                        ans=ans_txt,
+                        meta=meta,
+                    )
                 ctx, ctx_meta = _assemble_context(dr, budget_chars=budget["ctx_chars"], budget_tokens=budget["ctx_tokens"])
                 meta["clamp"]["context"] = {
                     "char_clamped": bool(ctx_meta.get("char_clamped")),
@@ -2274,7 +2352,12 @@ def run_query(
                     "budget_tokens": budget["ctx_tokens"],
                 }
                 meta["flags"]["ctx_clamped"] = bool(ctx_meta.get("char_clamped") or ctx_meta.get("token_clamped"))
-                prompt = f"Context:\n{ctx}\n\nQuestion: {q}\nAnswer concisely without quotes."
+                prompt = (
+                    "You are a cautious assistant. Use ONLY the provided context to answer the question.\n"
+                    "Summarize evidence explicitly present in the context. Do NOT add unsupported claims.\n"
+                    f"If the context is insufficient, respond with \"{LLM_ABSTAIN}\".\n\n"
+                    f"Context:\n{ctx}\n\nQuestion: {q}\nAnswer:"
+                )
                 prompt_clamped, prompt_meta = _clamp_text(
                     prompt, budget["prompt_chars"], budget["prompt_tokens"], LLM_CLAMP_MARKER
                 )
