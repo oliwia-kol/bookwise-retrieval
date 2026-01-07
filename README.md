@@ -1,146 +1,72 @@
-# RAG Books Search (CPU-only)
+# RAG Books Search
 
-Streamlit UI for retrieval-augmented search across indexed technical books. The pipeline is CPU-only (FAISS + sqlite + CrossEncoder judge), so no GPU/CUDA is required or supported.
-
-## React Frontend + FastAPI Backend
-
-For the React UI with FastAPI backend:
-
-### Backend Setup (venv)
-
-```bash
-# Create and activate virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# or: .venv\Scripts\activate  # Windows
-
-# Install dependencies
-pip install -U pip
-pip install -r requirements.txt
-
-# Run FastAPI server (development)
-uvicorn api_server:app --reload --host 0.0.0.0 --port 8000
-
-# Run FastAPI server (production)
-gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api_server:app
-```
-
-### Frontend Setup
-
-```bash
-# Install Node dependencies
-npm install
-
-# Create .env with your backend URL
-cp .env.example .env
-# Edit .env and set VITE_API_URL to your backend URL
-# Optionally set VITE_USE_MOCKS=true to use mock data
-
-# Run React dev server
-npm run dev
-```
-
-### Environment Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_API_URL` | FastAPI backend URL (required) | `http://localhost:8000` or Codespaces URL |
-| `VITE_USE_MOCKS` | Use mock data instead of API | `true` |
-| `OMP_NUM_THREADS` | Limit CPU threads | `2` |
-| `MKL_NUM_THREADS` | Limit BLAS threads | `2` |
-
-### Deployment notes (backend)
-
-Use the FastAPI entrypoint in `api_server.py` and expose port 8000 on your platform.
-
-- **Development**: `uvicorn api_server:app --host 0.0.0.0 --port 8000`
-- **Production**: `gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api_server:app`
-- **Railway/Render**: set the start command to one of the above and expose port 8000.
-- **Codespaces**: forward port 8000 and set `VITE_API_URL` to the forwarded public URL.
-- **Dependencies**: ensure deploys install from `requirements.txt`.
+CPU-only retrieval-augmented search across indexed technical books (FAISS + SQLite + CrossEncoder).
 
 ---
 
-## Streamlit UI (Quick start)
+## Quick Start
 
-```bash
-git clone <REPO_URL>
-cd rag-books-search
-python -m venv .venv
-source .venv/bin/activate
-pip install -U pip
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-Then open http://localhost:8501.
-
-## Chat mode (app.py)
-
-The custom UI includes a chat panel above the main answer/evidence area. It
-uses the same RAG retrieval engine and a stubbed answer composer, so it runs on
-CPU-only (no GPU/CUDA required).
-
-How to use:
-
-1. Start the custom app: `streamlit run app.py`
-2. Type a question in the chat input and press Enter.
-3. The assistant replies with an answer or a short summary of sources.
-
-The chat history is stored in `st.session_state`, so it persists across
-Streamlit reruns during the session.
-
-### Requirements
-
-- Python 3.10+ (same as the rest of the app)
-- Streamlit (installed via `requirements.txt`)
-- CPU-only environment (FAISS + sqlite + CrossEncoder judge)
-
-### Local install & run (custom UI)
+### 1. Backend (Python)
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -U pip
 pip install -r requirements.txt
-streamlit run app.py
+uvicorn api_server:app --host 0.0.0.0 --port 8000
 ```
 
-## Data layout (required corpora)
+### 2. Frontend (React)
 
-Place CPU-friendly indexes under `.data/<publisher>/` (preferred for keeping artifacts out of sight) or `data/<publisher>/` using the same structure for each publisher. You can also override the location with `RAG_DATA_ROOT`.
+```bash
+npm install
+npm run dev
+```
+
+### 3. Codespaces
+
+```bash
+# Terminal 1: Backend
+source .venv/bin/activate
+uvicorn api_server:app --host 0.0.0.0 --port 8000
+
+# Terminal 2: Frontend (auto-detects Codespaces URL)
+npm run dev:codespaces
+```
+
+---
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Backend URL (auto-set in Codespaces) |
+| `VITE_USE_MOCKS` | `true` to use mock data |
+| `OMP_NUM_THREADS` | Limit CPU threads (e.g., `2`) |
+
+---
+
+## Data Layout
 
 ```
-.data/
+data/
 ├── OReilly/
 │   ├── index.faiss
-│   ├── meta.sqlite
-│   └── manifest.json
+│   └── meta.sqlite
 ├── Manning/
 │   ├── index.faiss
-│   ├── meta.sqlite
-│   └── manifest.json
+│   └── meta.sqlite
 └── Pearson/
     ├── index.faiss
-    ├── meta.sqlite
-    └── manifest.json
+    └── meta.sqlite
 ```
 
-Only the index artifacts are needed; source PDFs/EPUBs are not required. The backend only marks a corpus as ready when both `index.faiss` and `meta.sqlite` exist for a publisher.
+---
 
-## Checks and tests
+## Commands
 
-- Quick environment sanity check (Python, deps, corpus files): `python scripts/check_env.py`
-- Contract smoke for UI + engine modules: `python smoke_ui_contract.py`
-- Compile entrypoints: `python -m py_compile app.py rag_engine.py ui_adapter.py ui_shell.py ui_theme.py smoke_ui_contract.py`
-- Full test suite: `pytest`
-
-## Keep CPU usage in check
-
-If your local CPU is pegged when running the app, cap the BLAS thread count before launching Streamlit:
-
-```bash
-export OMP_NUM_THREADS=2
-export MKL_NUM_THREADS=2
-streamlit run app.py
-```
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start frontend (localhost) |
+| `npm run dev:codespaces` | Start frontend (Codespaces) |
+| `uvicorn api_server:app --port 8000` | Start backend |
+| `pytest` | Run tests |
