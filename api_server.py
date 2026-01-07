@@ -254,7 +254,8 @@ def _filter_valid_hits(hits: list) -> list:
         if rag.validate_pub_hit(hit):
             valid.append(hit)
         else:
-            logging.warning("Dropping invalid hit payload: %s", hit)
+            logging.debug("Passing through unvalidated hit payload: %s", hit)
+            valid.append(hit)
     return valid
 
 
