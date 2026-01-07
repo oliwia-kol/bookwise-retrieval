@@ -77,12 +77,15 @@ export function AppLayout() {
         const sourceCount = hits.length;
         const topHits = hits.slice(0, 3);
         const answer = typeof searchResult.answer === 'string' ? searchResult.answer.trim() : '';
+        const hasNoEvidence = Boolean(searchResult.no_evidence) || searchResult.coverage === 'LOW';
 
         const responseContent = [
           `Answer`,
-          answer || (sourceCount > 0
-            ? 'Here are the most relevant passages I found in your library.'
-            : "I don't know based on the current sources. Try rephrasing or choosing a different topic."),
+          hasNoEvidence
+            ? 'Abstain — no direct evidence to answer confidently.'
+            : (answer || (sourceCount > 0
+              ? 'Here are the most relevant passages I found in your library.'
+              : "I don't know based on the current sources. Try rephrasing or choosing a different topic.")),
           ``,
           `Sources (${sourceCount})`,
           sourceCount > 0

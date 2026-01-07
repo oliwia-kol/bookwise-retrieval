@@ -66,6 +66,7 @@ export interface SearchResponse {
   coverage: 'HIGH' | 'MEDIUM' | 'LOW';
   confidence: number;
   answer: string | null;
+  no_evidence: boolean;
   meta: SearchMeta;
   error?: string;
 }

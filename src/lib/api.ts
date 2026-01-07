@@ -375,6 +375,7 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
         coverage: 'LOW',
         confidence: 0,
         answer: null,
+        no_evidence: true,
         meta: buildSearchMeta(filters),
         error: 'Unable to reach the search service.',
       };
@@ -416,6 +417,7 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
     coverage: filteredHits.length >= 3 ? 'HIGH' : filteredHits.length >= 1 ? 'MEDIUM' : 'LOW',
     confidence: filteredHits.length > 0 ? filteredHits[0].j_score : 0,
     answer: null,
+    no_evidence: filteredHits.length === 0,
     meta: {
       ...baseMeta,
       n: {
