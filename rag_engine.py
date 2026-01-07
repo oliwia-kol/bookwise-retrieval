@@ -1886,7 +1886,11 @@ def _log_event(meta, mode, pubs_requested, qlen, hits=None):
     _config_logger()
     try:
         base = dict(meta.get("log", {}) or {})
+        err = meta.get("err") or {}
+        err_id = err.get("id") or err.get("error_id")
         scope_used = _scope_from_hits(hits)
+        no_evidence = meta.get("err") is None and meta.get("n", {}).get("direct_hits", 0) == 0
+        llm_abstained = bool(meta.get("flags", {}).get("llm_abstained", False))
         payload = {
             "ts": time.time(),
             "mode": mode,
@@ -1905,14 +1909,22 @@ def _log_event(meta, mode, pubs_requested, qlen, hits=None):
             "judge_ok": meta.get("cap", {}).get("judge_ok", False),
             "judge_kind": meta.get("cap", {}).get("judge_kind", "none"),
             "judge_mode": base.get("judge_mode"),
-            "no_evidence": meta.get("err") is None and meta.get("n", {}).get("direct_hits", 0) == 0,
+            "no_evidence": no_evidence,
             "durations": dict(meta.get("t", {})),
-            "error_id": (meta.get("err") or {}).get("id"),
+            "error_id": err_id,
             "llm_err": meta.get("err_llm"),
             "llm_dur": meta.get("t", {}).get("llm"),
             "clamp": dict(meta.get("clamp", {})),
             "judge_cache_hits": base.get("judge_cache_hits", 0),
             "judge_cache_misses": base.get("judge_cache_misses", 0),
+            "decision": {
+                "no_evidence": no_evidence,
+                "coverage": meta.get("coverage"),
+                "coverage_score": meta.get("cov"),
+                "llm_abstained": llm_abstained,
+                "llm_used": bool(meta.get("flags", {}).get("llm_used", False)),
+            },
+            "error": {"id": err_id, "where": err.get("where"), "msg": err.get("msg")},
             "judge": {
                 "ok": meta.get("cap", {}).get("judge_ok", False),
                 "kind": meta.get("cap", {}).get("judge_kind", "none"),
