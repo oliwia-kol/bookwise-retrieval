@@ -525,7 +525,8 @@ def _mk_eng(
                     db_ok = fts_ready(con)
                 except sqlite3.DatabaseError as e:
                     failure_reason = failure_reason or f"metadata db error: {type(e).__name__}"
-                    db_ok = False
+                    rep["db_error"] = True
+                    db_ok = True
                 finally:
                     try:
                         con.close()
