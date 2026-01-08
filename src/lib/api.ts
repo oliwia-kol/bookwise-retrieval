@@ -2,10 +2,13 @@ import type { SearchFilters, SearchResponse, HealthResponse, EvidenceHit, Publis
 import { supabase } from '@/integrations/supabase/client';
 
 let _cachedApiBase: string | null = null;
+let _lastHealthCheckFailed = false;
 
-async function getApiBase(): Promise<string> {
-  // Return cached value if available
-  if (_cachedApiBase !== null) return _cachedApiBase;
+async function getApiBase(skipCache = false): Promise<string> {
+  // Return cached value if available (unless skip requested or last health failed)
+  if (_cachedApiBase !== null && !skipCache && !_lastHealthCheckFailed) {
+    return _cachedApiBase;
+  }
 
   // Check env var first
   const configured = (import.meta.env.VITE_API_URL || '').trim();
@@ -44,6 +47,7 @@ async function getApiBase(): Promise<string> {
 // Force refresh of cached API base (call when URL might have changed)
 export function clearApiBaseCache() {
   _cachedApiBase = null;
+  _lastHealthCheckFailed = false;
 }
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCKS === 'true';
@@ -406,15 +410,19 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
   if (!USE_MOCK) {
     try {
       const url = await buildApiUrl('/search');
+      console.log('[API] Searching:', url);
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, ...filters }),
       });
       if (!res.ok) throw new Error(`API error: ${res.status}`);
+      _lastHealthCheckFailed = false; // Success means URL is good
       return res.json();
     } catch (err) {
       console.error('API request failed:', err);
+      // Mark that we had a failure so next request refreshes the URL
+      _lastHealthCheckFailed = true;
       return {
         ok: false,
         query,
@@ -517,12 +525,16 @@ export async function fetchHealth(): Promise<HealthResponse> {
   if (!USE_MOCK) {
     try {
       const url = await buildApiUrl('/health');
+      console.log('[API] Health check:', url);
       const res = await fetch(url);
       if (!res.ok) throw new Error(`API error: ${res.status}`);
       const data = await res.json();
+      _lastHealthCheckFailed = false; // Success means URL is good
       return normalizeHealthResponse(data);
     } catch (err) {
       console.error('Health check failed:', err);
+      // Mark failure so next call refreshes URL from DB
+      _lastHealthCheckFailed = true;
       return normalizeHealthResponse({
         ok: false,
         corpus_count: 0,
