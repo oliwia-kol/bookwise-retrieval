@@ -221,6 +221,7 @@ class SearchRequest(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: list[dict] = Field(default_factory=list)
+    use_llm: bool = False
 
     @field_validator("message")
     @classmethod
@@ -485,7 +486,7 @@ async def chat(req: ChatRequest):
     
     try:
         preferred_mode = "exact" if "exact" in _available_modes() else "quick"
-        result = rag.run_query(engine, req.message, mode=preferred_mode)
+        result = rag.run_query(engine, req.message, mode=preferred_mode, use_llm=req.use_llm)
         answer = _compose_chat_answer(req.message, result)
         
         return {
