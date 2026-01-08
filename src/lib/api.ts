@@ -407,6 +407,9 @@ const normalizeHealthResponse = (data: HealthResponse): HealthResponse => {
 };
 
 export async function searchAPI(query: string, filters: SearchFilters): Promise<SearchResponse> {
+  // Map frontend sort values to backend expected values
+  const apiSort = filters.sort === 'Best evidence' ? 'Judge' : 'Semantic';
+  
   if (!USE_MOCK) {
     try {
       const url = await buildApiUrl('/search');
@@ -414,7 +417,7 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, ...filters }),
+        body: JSON.stringify({ query, ...filters, sort: apiSort }),
       });
       if (!res.ok) throw new Error(`API error: ${res.status}`);
       _lastHealthCheckFailed = false; // Success means URL is good
