@@ -3,15 +3,17 @@ import { Sparkles, BookOpen, Zap, Library, CheckCircle2, AlertTriangle } from 'l
 import { AppHeader } from './AppHeader';
 import { ChatMessage } from './chat/ChatMessage';
 import { ChatInput } from './chat/ChatInput';
+import { ChatUnavailable } from './chat/ChatUnavailable';
 import { SettingsModal } from './SettingsModal';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { LivingBackground } from './effects/LivingBackground';
 import { CursorSpotlight } from './effects/CursorSpotlight';
+import { SearchResponse } from './search/SearchResponse';
 import { Button } from '@/components/ui/button';
 import { useSearch, useHealth } from '@/hooks/useSearch';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
-import type { SearchFilters, ChatMessage as ChatMessageType, Publisher, ConversationMode, EvidenceHit } from '@/lib/types';
+import type { SearchFilters, ChatMessage as ChatMessageType, Publisher, ConversationMode, EvidenceHit, SearchResponse as SearchResponseType } from '@/lib/types';
 import { chatAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -43,6 +45,8 @@ export function AppLayout() {
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [currentQuery, setCurrentQuery] = useState('');
+  const [searchResponse, setSearchResponse] = useState<SearchResponseType | null>(null);
+  const [lastSearchQuery, setLastSearchQuery] = useState('');
   const [requestFailure, setRequestFailure] = useState<{ title: string; description: string } | null>(null);
   const [conversationMode, setConversationMode] = useState<ConversationMode>('search');
   const [isChatLoading, setIsChatLoading] = useState(false);
@@ -72,47 +76,6 @@ export function AppLayout() {
     if (searchResult && currentQuery && currentQuery !== processedQueryRef.current) {
       processedQueryRef.current = currentQuery;
       
-      // Remove loading message and add assistant response
-      setMessages(prev => {
-        const withoutLoading = prev.filter(m => !m.isLoading);
-
-        if (!searchResult.ok) {
-          return withoutLoading;
-        }
-
-        const hits = searchResult.hits ?? [];
-        const sourceCount = hits.length;
-        const topHits = hits.slice(0, 3);
-        const answer = typeof searchResult.answer === 'string' ? searchResult.answer.trim() : '';
-        const hasNoEvidence = Boolean(searchResult.no_evidence) || searchResult.coverage === 'LOW';
-
-        const responseContent = [
-          `Answer`,
-          hasNoEvidence
-            ? 'Abstain — no direct evidence to answer confidently.'
-            : (answer || (sourceCount > 0
-              ? 'Here are the most relevant passages I found in your library.'
-              : "I don't know based on the current sources. Try rephrasing or choosing a different topic.")),
-          ``,
-          `Sources (${sourceCount})`,
-          sourceCount > 0
-            ? topHits.map((hit, i) => (
-                `${i + 1}. ${hit.title} — ${hit.publisher}${hit.section ? ` · ${hit.section}` : ''}\n   ${hit.snippet}`
-              )).join('\n\n')
-            : 'No sources matched this query.',
-          ``,
-          `Quality`,
-          `Coverage: ${searchResult.coverage ?? 'Unknown'} · Confidence: ${(searchResult.confidence ?? 0).toFixed(2)}`,
-        ].join('\n');
-
-        return [...withoutLoading, {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: responseContent,
-          evidence: searchResult.hits,
-          timestamp: new Date(),
-        }];
-      });
       if (!searchResult.ok) {
         setRequestFailure({
           title: 'Search is temporarily unavailable',
@@ -120,6 +83,8 @@ export function AppLayout() {
         });
       } else {
         setRequestFailure(null);
+        setSearchResponse(searchResult);
+        setLastSearchQuery(currentQuery);
       }
       setCurrentQuery('');
     }
@@ -196,6 +161,8 @@ export function AppLayout() {
   const handleNewChat = useCallback(() => {
     setMessages([]);
     setCurrentQuery('');
+    setSearchResponse(null);
+    setLastSearchQuery('');
     processedQueryRef.current = null;
     setRequestFailure(null);
   }, []);
@@ -204,6 +171,8 @@ export function AppLayout() {
   const { showShortcuts, setShowShortcuts } = useKeyboardShortcuts();
 
   const hasMessages = messages.length > 0;
+  const hasSearchResults = !!searchResponse;
+  const hasContent = isSearchMode ? hasSearchResults : hasMessages;
   const modeOptions: { id: ConversationMode; label: string; description: string }[] = [
     { id: 'search', label: 'Search', description: 'RAG only' },
     { id: 'chat', label: 'Chat', description: 'LLM + RAG' },
@@ -228,17 +197,24 @@ export function AppLayout() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[hsl(var(--brand-gold)/0.18)] via-transparent to-transparent" />
         <AppHeader 
           onOpenSettings={() => setSettingsOpen(true)}
-          onNewChat={hasMessages ? handleNewChat : undefined}
+          onNewChat={hasContent ? handleNewChat : undefined}
           isDark={isDark}
           onToggleTheme={toggleTheme}
         />
 
         {/* Chat area */}
         <div className="flex-1 flex flex-col min-h-0 pb-24 sm:pb-32">
-          {!hasMessages ? (
+          {!hasContent ? (
             /* Empty state - Hero */
             <div className="flex-1 flex flex-col items-center justify-center">
               <div className={cn("w-full flex flex-col items-center", layoutContainer)}>
+                {/* Show ChatUnavailable banner in chat mode */}
+                {!isSearchMode && (
+                  <div className="w-full max-w-2xl mb-6">
+                    <ChatUnavailable onSwitchToSearch={() => handleModeChange('search')} />
+                  </div>
+                )}
+                
                 <div className="w-full max-w-4xl animate-fade-in motion-reduce:animate-none">
                   <div className="relative overflow-hidden rounded-[26px] sm:rounded-[32px] bg-background/65 px-4 py-8 text-center shadow-[0_30px_80px_rgba(12,10,24,0.35)] backdrop-blur-2xl sm:px-12 sm:py-16">
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent" />
@@ -322,6 +298,69 @@ export function AppLayout() {
                 </div>
               </div>
             </div>
+          ) : isSearchMode ? (
+            /* Search Results Display */
+            <ScrollArea className="flex-1">
+              <div className={cn("py-8 sm:py-12", layoutContainer)}>
+                {/* Query header */}
+                <div className="mb-6">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Search query</p>
+                  <h2 className="text-lg font-semibold text-foreground">{lastSearchQuery}</h2>
+                </div>
+                
+                {/* Loading state */}
+                {isSearchLoading ? (
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-border/40 bg-card/70 p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="h-10 w-10 rounded-xl bg-muted/50 animate-pulse" />
+                        <div className="flex-1 space-y-3">
+                          <div className="h-4 w-3/4 rounded bg-muted/50 animate-pulse" />
+                          <div className="h-3 w-full rounded bg-muted/40 animate-pulse" />
+                          <div className="h-3 w-2/3 rounded bg-muted/40 animate-pulse" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="rounded-2xl border border-border/40 bg-card/60 p-4">
+                          <div className="space-y-3">
+                            <div className="h-3 w-1/2 rounded bg-muted/50 animate-pulse" />
+                            <div className="h-2 w-3/4 rounded bg-muted/40 animate-pulse" />
+                            <div className="h-2 w-full rounded bg-muted/30 animate-pulse" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : searchResponse ? (
+                  <SearchResponse response={searchResponse} query={lastSearchQuery} />
+                ) : null}
+                
+                {requestFailure && (
+                  <div className="animate-fade-in motion-reduce:animate-none mt-6">
+                    <div className="relative overflow-hidden rounded-[24px] border border-border/30 bg-background/70 p-5 sm:p-7 shadow-[0_20px_50px_rgba(12,10,24,0.25)] backdrop-blur-xl">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent" />
+                      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/70 border border-border/40">
+                          <AlertTriangle className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-title text-foreground">{requestFailure.title}</h3>
+                          <p className="text-sm sm:text-body text-muted-foreground">
+                            {requestFailure.description}
+                          </p>
+                          <p className="text-xs sm:text-caption text-muted-foreground/70">
+                            Keep this tab open and try again in a moment.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
           ) : (
             /* Chat messages */
             <ScrollArea className="flex-1">
