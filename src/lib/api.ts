@@ -1,4 +1,4 @@
-import type { SearchFilters, SearchResponse, HealthResponse, EvidenceHit, Publisher } from './types';
+import type { SearchFilters, SearchResponse, HealthResponse, EvidenceHit, Publisher, ChatResponse } from './types';
 import { supabase } from '@/integrations/supabase/client';
 
 let _cachedApiBase: string | null = null;
@@ -473,6 +473,43 @@ export async function searchAPI(query: string, filters: SearchFilters): Promise<
         after_judge: filteredHits.length,
       },
     },
+  };
+}
+
+export async function chatAPI(message: string, use_llm = false): Promise<ChatResponse> {
+  if (!USE_MOCK) {
+    try {
+      const url = await buildApiUrl('/chat');
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, history: [], use_llm }),
+      });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json();
+    } catch (err) {
+      console.error('Chat request failed:', err);
+      return {
+        ok: false,
+        answer: '',
+        sources: [],
+        error: 'Unable to reach the chat service.',
+      };
+    }
+  }
+
+  await delay(600);
+
+  const topic = detectTopic(message);
+  const topicHits = MOCK_DATA[topic] || MOCK_DATA.default;
+  const sources = topicHits.slice(0, 3);
+
+  return {
+    ok: true,
+    answer: sources.length
+      ? `Here is a grounded summary based on ${sources.length} passages from your library.`
+      : 'No relevant passages found.',
+    sources,
   };
 }
 

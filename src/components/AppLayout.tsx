@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { useSearch, useHealth } from '@/hooks/useSearch';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
-import type { SearchFilters, ChatMessage as ChatMessageType, Publisher } from '@/lib/types';
+import type { SearchFilters, ChatMessage as ChatMessageType, Publisher, ConversationMode, EvidenceHit } from '@/lib/types';
+import { chatAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -42,13 +43,18 @@ export function AppLayout() {
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [currentQuery, setCurrentQuery] = useState('');
-  const [searchFailure, setSearchFailure] = useState<{ title: string; description: string } | null>(null);
+  const [requestFailure, setRequestFailure] = useState<{ title: string; description: string } | null>(null);
+  const [conversationMode, setConversationMode] = useState<ConversationMode>('search');
+  const [isChatLoading, setIsChatLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { isDark, toggleTheme } = useTheme();
   const { data: health } = useHealth();
-  const isReady = Boolean(health?.ready);
-  const { data: searchResult, isLoading } = useSearch(currentQuery, filters, isReady);
+  const isBackendReady = Boolean(health?.ready);
+  const isBackendOnline = Boolean(health?.engine_available ?? health?.ok);
+  const isSearchMode = conversationMode === 'search';
+  const { data: searchResult, isLoading: isSearchLoading } = useSearch(currentQuery, filters, isSearchMode);
+  const isLoading = isSearchLoading || isChatLoading;
 
   const availablePublishers: Publisher[] = health?.publishers || ['OReilly', 'Manning', 'Pearson'];
   const layoutContainer = "w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-12";
@@ -62,6 +68,7 @@ export function AppLayout() {
   const processedQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!isSearchMode) return;
     if (searchResult && currentQuery && currentQuery !== processedQueryRef.current) {
       processedQueryRef.current = currentQuery;
       
@@ -107,19 +114,25 @@ export function AppLayout() {
         }];
       });
       if (!searchResult.ok) {
-        setSearchFailure({
+        setRequestFailure({
           title: 'Search is temporarily unavailable',
           description: searchResult.error || 'Please confirm the backend is running and try again.',
         });
       } else {
-        setSearchFailure(null);
+        setRequestFailure(null);
       }
       setCurrentQuery('');
     }
-  }, [searchResult, currentQuery]);
+  }, [searchResult, currentQuery, isSearchMode]);
 
-  const handleSubmit = useCallback((message: string) => {
-    if (!isReady) return;
+  const buildSourcesSummary = useCallback((sources: EvidenceHit[]) => {
+    if (!sources.length) return 'No sources matched this query.';
+    return sources.slice(0, 3).map((hit, i) => (
+      `${i + 1}. ${hit.title} — ${hit.publisher}${hit.section ? ` · ${hit.section}` : ''}\n   ${hit.snippet}`
+    )).join('\n\n');
+  }, []);
+
+  const handleSubmit = useCallback(async (message: string) => {
     // Add user message
     const userMessage: ChatMessageType = {
       id: `user-${Date.now()}`,
@@ -138,21 +151,69 @@ export function AppLayout() {
     };
 
     setMessages(prev => [...prev, userMessage, loadingMessage]);
-    setCurrentQuery(message);
-    setSearchFailure(null);
-  }, [isReady]);
+    setRequestFailure(null);
+
+    if (isSearchMode) {
+      setCurrentQuery(message);
+      return;
+    }
+
+    setIsChatLoading(true);
+    try {
+      const result = await chatAPI(message, true);
+      setMessages(prev => {
+        const withoutLoading = prev.filter(m => !m.isLoading);
+        if (!result.ok) {
+          return withoutLoading;
+        }
+        const sources = result.sources ?? [];
+        const responseContent = [
+          result.answer || 'No response generated.',
+          ``,
+          `Sources (${sources.length})`,
+          buildSourcesSummary(sources),
+        ].join('\n');
+
+        return [...withoutLoading, {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: responseContent,
+          evidence: sources,
+          timestamp: new Date(),
+        }];
+      });
+      if (!result.ok) {
+        setRequestFailure({
+          title: 'Chat is temporarily unavailable',
+          description: result.error || 'Please confirm the backend is running and try again.',
+        });
+      }
+    } finally {
+      setIsChatLoading(false);
+    }
+  }, [buildSourcesSummary, isSearchMode]);
 
   const handleNewChat = useCallback(() => {
     setMessages([]);
     setCurrentQuery('');
     processedQueryRef.current = null;
-    setSearchFailure(null);
+    setRequestFailure(null);
   }, []);
 
   // Keyboard shortcuts
   const { showShortcuts, setShowShortcuts } = useKeyboardShortcuts();
 
   const hasMessages = messages.length > 0;
+  const modeOptions: { id: ConversationMode; label: string; description: string }[] = [
+    { id: 'search', label: 'Search', description: 'RAG only' },
+    { id: 'chat', label: 'Chat', description: 'LLM + RAG' },
+  ];
+  const handleModeChange = useCallback((mode: ConversationMode) => {
+    setConversationMode(mode);
+    setCurrentQuery('');
+    processedQueryRef.current = null;
+    setRequestFailure(null);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-background relative overflow-hidden">
@@ -227,7 +288,6 @@ export function AppLayout() {
                       <div className="flex flex-col items-center gap-3 sm:gap-4">
                         <Button
                           onClick={() => handleSubmit(SUGGESTED_QUERIES[0])}
-                          disabled={!isReady}
                           variant="cta"
                           className={cn(
                             "gap-2 rounded-full px-6 py-3 text-sm",
@@ -246,12 +306,10 @@ export function AppLayout() {
                             <button
                               key={query}
                               onClick={() => handleSubmit(query)}
-                              disabled={!isReady}
                               className={cn(
                                 "px-4 py-2.5 rounded-xl text-xs sm:text-caption w-full sm:w-auto",
                                 "bg-secondary/50 hover:bg-secondary border border-border/30 hover:border-primary/30",
                                 "transition-all duration-200 hover:scale-[1.02] motion-reduce:transition-none motion-reduce:transform-none",
-                                !isReady && "cursor-not-allowed opacity-50 hover:scale-100"
                               )}
                             >
                               {query}
@@ -274,7 +332,7 @@ export function AppLayout() {
                     message={message}
                   />
                 ))}
-                {searchFailure && (
+                {requestFailure && (
                   <div className="animate-fade-in motion-reduce:animate-none">
                     <div className="relative overflow-hidden rounded-[24px] border border-border/30 bg-background/70 p-5 sm:p-7 shadow-[0_20px_50px_rgba(12,10,24,0.25)] backdrop-blur-xl">
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent" />
@@ -283,9 +341,9 @@ export function AppLayout() {
                           <AlertTriangle className="h-6 w-6 text-primary" />
                         </div>
                         <div className="space-y-2">
-                          <h3 className="text-title text-foreground">{searchFailure.title}</h3>
+                          <h3 className="text-title text-foreground">{requestFailure.title}</h3>
                           <p className="text-sm sm:text-body text-muted-foreground">
-                            {searchFailure.description}
+                            {requestFailure.description}
                           </p>
                           <p className="text-xs sm:text-caption text-muted-foreground/70">
                             Keep this tab open and try again in a moment.
@@ -303,16 +361,48 @@ export function AppLayout() {
           {/* Input area */}
           <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/10 bg-background/80 backdrop-blur-xl">
             <div className={cn("py-3 sm:py-4", layoutContainer)}>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                  <span
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      isBackendOnline ? (isBackendReady ? "bg-emerald-400" : "bg-amber-400") : "bg-rose-400"
+                    )}
+                  />
+                  <span>
+                    {isBackendOnline
+                      ? (isBackendReady ? "Engine online" : "Engine online — corpus warming up.")
+                      : "Engine offline — we'll still try your request."}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {modeOptions.map((option) => (
+                    <Button
+                      key={option.id}
+                      type="button"
+                      size="sm"
+                      variant={conversationMode === option.id ? "secondary" : "ghost"}
+                      onClick={() => handleModeChange(option.id)}
+                      className={cn(
+                        "h-8 rounded-full px-3 text-xs",
+                        conversationMode === option.id && "bg-secondary/80 text-foreground"
+                      )}
+                    >
+                      <span>{option.label}</span>
+                      <span className="text-[10px] text-muted-foreground/70">{option.description}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <ChatInput
                 onSubmit={handleSubmit}
                 isLoading={isLoading}
-                disabled={!isReady}
                 placeholder={
-                  !isReady
-                    ? "Search will be available when the engine is ready..."
-                    : hasMessages
-                      ? "Ask a follow-up..."
-                      : "Ask about your technical library..."
+                  !isBackendReady
+                    ? "Backend offline — we'll still try to answer..."
+                    : isSearchMode
+                      ? "Search your technical library..."
+                      : "Chat with your technical library..."
                 }
               />
             </div>

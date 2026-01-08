@@ -5,6 +5,7 @@ export type SearchMode = 'quick' | 'exact';
 export type SortOption = 'Best evidence' | 'Semantic';
 export type JudgeTier = 'Strong' | 'Solid' | 'Weak' | 'Poor';
 export type JudgeMode = 'real' | 'proxy' | 'off';
+export type ConversationMode = 'search' | 'chat';
 
 export interface SearchFilters {
   pubs: Publisher[];
@@ -79,6 +80,13 @@ export interface HealthResponse {
   engine_available: boolean;
   corpora_ok: boolean;
   ready: boolean;
+  error?: string;
+}
+
+export interface ChatResponse {
+  ok: boolean;
+  answer: string;
+  sources: EvidenceHit[];
   error?: string;
 }
 
