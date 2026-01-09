@@ -5,12 +5,12 @@
 ```
 ┌───────────────┐        ┌─────────────────┐        ┌──────────────────────┐
 │ React UI      │ <----> │ FastAPI Service │ <----> │ RAG Engine            │
-│ (src/)        │        │ (api_server.py) │        │ (rag_engine.py)       │
+│ (src/)        │        │ (hf_space/api_server.py) │        │ (hf_space/rag_engine.py)       │
 └───────────────┘        └─────────────────┘        └──────────────────────┘
                                                              │
                                                              v
                                                     ┌──────────────────────┐
-                                                    │ Data Root (.data/)    │
+                                                    │ Data Root (hf_space/.data) │
                                                     │ - index.faiss         │
                                                     │ - meta.sqlite         │
                                                     │ - manifest.json       │
@@ -19,16 +19,16 @@
 
 ## High-level components
 
-- **Data root** (`.data/`, `data/`, or `RAG_DATA_ROOT`): Stores per-publisher FAISS indexes, SQLite metadata, and manifest files.
-- **RAG engine** (`rag_engine.py`): Loads indexes, runs dense + lexical retrieval, and produces ranked hits and answers.
-- **FastAPI service** (`api_server.py`): Wraps the engine with REST endpoints for search, chat, stats, and history.
+- **Data root** (`hf_space/.data`, `hf_space/data`, or `RAG_DATA_ROOT`): Stores per-publisher FAISS indexes, SQLite metadata, and manifest files.
+- **RAG engine** (`hf_space/rag_engine.py`): Loads indexes, runs dense + lexical retrieval, and produces ranked hits and answers.
+- **FastAPI service** (`hf_space/api_server.py`): Wraps the engine with REST endpoints for search, chat, stats, and history.
 - **React frontend** (`src/`): Browser UI for search, filtering, and chat.
 - **Streamlit app** (`app.py`): Alternative UI for quick local usage.
 
 ## Data flow
 
 1. Client submits a query via `/search` or `/chat`.
-2. FastAPI calls `rag_engine.run_query(...)`.
+2. FastAPI calls `hf_space.rag_engine.run_query(...)`.
 3. The engine embeds the query, searches the FAISS index, fuses lexical results, and applies scoring.
 4. Hits are formatted and returned to the client with metadata, coverage, and optional answer text.
 
@@ -63,5 +63,5 @@ The backend considers a publisher ready only when both `index.faiss` and `meta.s
 ## Extensibility
 
 - Add publishers by dropping new corpus folders in the data root.
-- Update retrieval weights and budgets in `rag_engine.py` (see `HCFG`).
+- Update retrieval weights and budgets in `hf_space/rag_engine.py` (see `HCFG`).
 - Frontend enhancements can call the same REST endpoints.

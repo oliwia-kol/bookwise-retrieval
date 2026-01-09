@@ -13,14 +13,14 @@ if str(ROOT_DIR) not in sys.path:
 
 @pytest.fixture
 def api_server_module(monkeypatch, tmp_path):
-    import rag_engine
+    from hf_space import rag_engine
 
     dummy_engine = SimpleNamespace(corp={"Pub": tmp_path / "Pub"}, corp_status={"Pub": {"ready": True}})
 
     monkeypatch.setattr(rag_engine, "_mk_eng", lambda: dummy_engine)
     monkeypatch.setattr(rag_engine, "mode_options", lambda: [{"name": "balanced"}])
 
-    import api_server
+    from hf_space import api_server
 
     importlib.reload(api_server)
     api_server.ENGINE = dummy_engine

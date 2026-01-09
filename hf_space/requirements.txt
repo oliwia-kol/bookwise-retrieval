@@ -1,0 +1,17 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+# Pin core packages to keep installs predictable and CPU-only.
+streamlit==1.35.0
+numpy==1.26.4
+faiss-cpu==1.13.1
+sentence-transformers==2.5.1
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+torchaudio==2.2.2+cpu
+pytest==7.4.4
+httpx>=0.24.0
+httpx>=0.24.0
+
+# FastAPI backend for React frontend
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6

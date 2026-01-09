@@ -6,7 +6,7 @@ This repository ships a FastAPI backend and a React frontend. You can deploy the
 
 - Python 3.10+
 - Node.js 18+
-- Corpus indexes under `.data/` or `data/` (or set `RAG_DATA_ROOT`).
+- Corpus indexes under `hf_space/.data` or `hf_space/data` (or set `RAG_DATA_ROOT`).
 
 ## Environment variables
 
@@ -26,7 +26,7 @@ This repository ships a FastAPI backend and a React frontend. You can deploy the
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn api_server:app --host 0.0.0.0 --port 8000
+uvicorn hf_space.api_server:app --host 0.0.0.0 --port 8000
 ```
 
 ### Production WSGI/ASGI
@@ -34,24 +34,24 @@ uvicorn api_server:app --host 0.0.0.0 --port 8000
 Use Gunicorn with Uvicorn workers:
 
 ```bash
-gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api_server:app
+gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 hf_space.api_server:app
 ```
 
 Add a reverse proxy (Nginx, Caddy) in front for TLS termination and request size limits.
 
 ### Managed platforms (Railway/Render/Fly)
 
-Use the FastAPI entrypoint in `api_server.py` and expose port 8000.
+Use the FastAPI entrypoint in `hf_space/api_server.py` and expose port 8000.
 
 **Start commands**
 
 - Development:
   ```bash
-  uvicorn api_server:app --host 0.0.0.0 --port 8000
+  uvicorn hf_space.api_server:app --host 0.0.0.0 --port 8000
   ```
 - Production:
   ```bash
-  gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api_server:app
+  gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 hf_space.api_server:app
   ```
 
 **Platform-specific notes**
@@ -69,10 +69,10 @@ Use the FastAPI entrypoint in `api_server.py` and expose port 8000.
    source .venv/bin/activate
    pip install -r requirements.txt
    ```
-3. Ensure corpus data is mounted under `.data/` or `data/` (or set `RAG_DATA_ROOT`).
+3. Ensure corpus data is mounted under `hf_space/.data` or `hf_space/data` (or set `RAG_DATA_ROOT`).
 4. Start the API:
    ```bash
-   uvicorn api_server:app --host 0.0.0.0 --port 8000
+   uvicorn hf_space.api_server:app --host 0.0.0.0 --port 8000
    ```
 5. For the frontend, run `npm install` and `npm run dev` with `VITE_API_URL` pointing at the forwarded backend port.
 

@@ -50,8 +50,8 @@ def resolve_data_root(explicit: Optional[str]) -> Path:
     env_data_root = os.environ.get("RAG_DATA_ROOT")
     if env_data_root:
         return Path(env_data_root).expanduser()
-    hidden = ROOT / ".data"
-    visible = ROOT / "data"
+    hidden = ROOT / "hf_space" / ".data"
+    visible = ROOT / "hf_space" / "data"
     if hidden.exists():
         return hidden
     return visible
@@ -218,7 +218,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate corpus indexes for the RAG engine.")
     parser.add_argument(
         "--data-root",
-        help="Override data root (defaults to RAG_DATA_ROOT, .data/, or data/).",
+        help="Override data root (defaults to RAG_DATA_ROOT, hf_space/.data, or hf_space/data).",
     )
     parser.add_argument(
         "--publisher",

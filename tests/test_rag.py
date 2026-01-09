@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
-import rag_engine
+from hf_space import rag_engine
 
 
 class DummyIndex:
