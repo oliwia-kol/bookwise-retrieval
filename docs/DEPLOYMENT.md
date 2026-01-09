@@ -82,6 +82,18 @@ Use the FastAPI entrypoint in `hf_space/api_server.py` and expose port 8000.
 - **Containers**: package the backend and data volume into a Docker image or bind-mount the data root.
 - **Managed platforms**: deploy the API to services like Render, Fly.io, or AWS ECS, and host the frontend on a static host.
 
+## Hugging Face Spaces
+
+The Hugging Face Space deployment uses the `hf_space/` subtree only. The Dockerfile and `requirements.txt` in that folder are published to the Space repository.
+
+- **Port**: expose FastAPI on port **7860** (HF Spaces default).
+- **GitHub Actions secrets**:
+  - `HF_TOKEN` (required): Hugging Face access token with write access to the Space repo.
+  - `HF_USERNAME` (optional): overrides the target HF account (defaults to the GitHub repository owner).
+  - `SPACE_NAME` (optional): overrides the target Space name (defaults to the GitHub repository name).
+
+The GitHub workflow pushes the subtree to `spaces/<HF_USERNAME>/<SPACE_NAME>`.
+
 ## Frontend (React)
 
 ```bash
