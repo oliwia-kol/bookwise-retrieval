@@ -1,7 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatTitle, formatSection, formatSnippet } from '@/lib/formatters';
 import type { EvidenceHit } from '@/lib/types';
-import { PublisherBadge } from './PublisherBadge';
 import { QualityIndicator } from './QualityIndicator';
 
 interface SearchResultCardProps {
@@ -15,60 +15,6 @@ const PUBLISHER_ACCENT: Record<string, string> = {
   Manning: 'hover:border-[hsl(255_55%_70%/0.5)] hover:shadow-[0_0_30px_hsl(255_55%_70%/0.15)]',
   Pearson: 'hover:border-[hsl(185_55%_55%/0.5)] hover:shadow-[0_0_30px_hsl(185_55%_55%/0.15)]',
 };
-
-// Format camelCase or concatenated words into readable title
-function formatTitle(title: string): string {
-  return title
-    // Insert space before uppercase letters (camelCase)
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    // Insert space before numbers
-    .replace(/([a-zA-Z])(\d)/g, '$1 $2')
-    // Insert space after numbers
-    .replace(/(\d)([a-zA-Z])/g, '$1 $2')
-    // Replace underscores and hyphens with spaces
-    .replace(/[_-]/g, ' ')
-    // Capitalize first letter of each word
-    .replace(/\b\w/g, c => c.toUpperCase())
-    .trim();
-}
-
-// Format section reference (ch06.html → Chapter 6)
-function formatSection(section: string): string {
-  if (!section) return '';
-  
-  // Match chapter patterns like ch06.html, chapter-3.html, etc.
-  const chapterMatch = section.match(/ch(?:apter)?[-_]?(\d+)/i);
-  if (chapterMatch) {
-    return `Chapter ${parseInt(chapterMatch[1], 10)}`;
-  }
-  
-  // Match index patterns like ix01.html
-  const indexMatch = section.match(/ix(\d+)/i);
-  if (indexMatch) {
-    return `Index ${parseInt(indexMatch[1], 10)}`;
-  }
-  
-  // Match appendix patterns
-  const appendixMatch = section.match(/app(?:endix)?[-_]?([a-z\d]+)/i);
-  if (appendixMatch) {
-    return `Appendix ${appendixMatch[1].toUpperCase()}`;
-  }
-  
-  // Remove file extension and format
-  return section.replace(/\.\w+$/, '').replace(/[_-]/g, ' ');
-}
-
-// Clean up snippet text
-function formatSnippet(snippet: string): string {
-  return snippet
-    // Normalize whitespace
-    .replace(/\s+/g, ' ')
-    // Remove leading punctuation or fragments
-    .replace(/^[,;:\-–—]\s*/, '')
-    // Clean up common artifacts
-    .replace(/\s+([,;:.])/g, '$1')
-    .trim();
-}
 
 export function SearchResultCard({ hit, index, onClick }: SearchResultCardProps) {
   const accentClass = PUBLISHER_ACCENT[hit.publisher] || PUBLISHER_ACCENT.OReilly;

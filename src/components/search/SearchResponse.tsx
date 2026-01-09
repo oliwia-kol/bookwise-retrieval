@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TrendingUp, AlertCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatTitle, formatSection, formatSnippet } from '@/lib/formatters';
 import type { SearchResponse as SearchResponseType, EvidenceHit } from '@/lib/types';
 import { SearchResultCard } from './SearchResultCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -109,12 +110,12 @@ export function SearchResponse({ response, query }: SearchResponseProps) {
           <DialogHeader className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <DialogTitle className="text-lg font-semibold text-foreground pr-8">
-                {selectedHit?.title}
+                {formatTitle(selectedHit?.title || '')}
               </DialogTitle>
               {selectedHit && <PublisherBadge publisher={selectedHit.publisher} size="md" />}
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              {selectedHit?.section && <span>{selectedHit.section}</span>}
+              {selectedHit?.section && <span>{formatSection(selectedHit.section)}</span>}
               {selectedHit && (
                 <QualityIndicator tier={selectedHit.tier} score={selectedHit.judge01} showLabel={true} />
               )}
@@ -127,7 +128,7 @@ export function SearchResponse({ response, query }: SearchResponseProps) {
               <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                 <h4 className="text-xs uppercase tracking-wider text-primary mb-2 font-medium">Key Passage</h4>
                 <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                  {selectedHit?.snippet}
+                  {formatSnippet(selectedHit?.snippet || '')}
                 </p>
               </div>
               
