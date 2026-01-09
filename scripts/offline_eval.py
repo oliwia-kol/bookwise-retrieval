@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import rag_engine as rag
+from hf_space import rag_engine as rag
 
 from eval_metrics import (
     compute_abstention_accuracy,
@@ -144,7 +144,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run offline RAG evaluation set.")
     parser.add_argument(
         "--eval-set",
-        default="data/eval/offline_eval_set.json",
+        default="hf_space/data/eval/offline_eval_set.json",
         help="Path to the evaluation set JSON file.",
     )
     parser.add_argument(

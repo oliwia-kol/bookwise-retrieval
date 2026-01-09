@@ -2123,7 +2123,7 @@ def run_query(
             return _mk_ret(ok=False, no_ev=True, hits=[], nm_hits=[], cov="WEAK", ans=msg, meta=meta)
 
         if not getattr(e, "corp", None) or (not getattr(e, "ix", None) and not getattr(e, "dbp", None)):
-            msg = "No corpus indexes available. Add .data/ or data/ indexes, or set RAG_DATA_ROOT."
+            msg = "No corpus indexes available. Add hf_space/.data or hf_space/data indexes, or set RAG_DATA_ROOT."
             err_id = _err_id("no_corpus_indexes")
             meta["err"] = {"where": "run_query", "msg": msg, "id": err_id, "error_id": err_id}
             meta["t"]["total"] = _dt(t_total)

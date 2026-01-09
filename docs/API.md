@@ -1,6 +1,6 @@
 # API Reference
 
-This document summarizes the FastAPI surface in `api_server.py`. The canonical OpenAPI schema is served at:
+This document summarizes the FastAPI surface in `hf_space/api_server.py`. The canonical OpenAPI schema is served at:
 
 - Swagger UI: `GET /docs`
 - ReDoc: `GET /redoc`

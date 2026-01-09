@@ -1,4 +1,4 @@
-"""FastAPI wrapper for RAG engine - run in Codespaces alongside rag_engine.py"""
+"""FastAPI wrapper for RAG engine - run in Codespaces alongside hf_space/rag_engine.py"""
 
 import asyncio
 import inspect
@@ -24,7 +24,7 @@ ENGINE_ERROR: str | None = None
 _ENGINE_LOCK = threading.Lock()
 
 try:
-    import rag_engine as rag
+    from . import rag_engine as rag
 except Exception as e:
     logging.warning("RAG engine module not available: %s", e)
 

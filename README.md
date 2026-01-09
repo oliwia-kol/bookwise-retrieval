@@ -12,7 +12,7 @@ CPU-only retrieval-augmented search across indexed technical books (FAISS + SQLi
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn api_server:app --host 0.0.0.0 --port 8000
+uvicorn hf_space.api_server:app --host 0.0.0.0 --port 8000
 ```
 
 ### 2. Frontend (React)
@@ -27,7 +27,7 @@ npm run dev
 ```bash
 # Terminal 1: Backend
 source .venv/bin/activate
-uvicorn api_server:app --host 0.0.0.0 --port 8000
+uvicorn hf_space.api_server:app --host 0.0.0.0 --port 8000
 
 # Terminal 2: Register backend URL (one-time per session)
 pip install supabase
@@ -52,7 +52,7 @@ The Lovable preview will auto-discover the backend URL from the database.
 ## Data Layout
 
 ```
-data/
+hf_space/data/
 ├── OReilly/
 │   ├── index.faiss
 │   └── meta.sqlite
@@ -72,5 +72,5 @@ data/
 |---------|-------------|
 | `npm run dev` | Start frontend (localhost) |
 | `npm run dev:codespaces` | Start frontend (Codespaces) |
-| `uvicorn api_server:app --port 8000` | Start backend |
+| `uvicorn hf_space.api_server:app --port 8000` | Start backend |
 | `pytest` | Run tests |

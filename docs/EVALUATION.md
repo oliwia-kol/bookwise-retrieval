@@ -4,7 +4,7 @@ This repository includes an offline evaluation set and a runner to measure retri
 
 ## Evaluation set
 
-* **Path**: `data/eval/offline_eval_set.json`
+* **Path**: `hf_space/data/eval/offline_eval_set.json`
 * **Contents**: Representative questions with expected citations (publisher, file path, section) plus abstention cases.
 * **Acceptance criteria**: Defined alongside the evaluation set (`min_evidence_coverage`, `max_false_positive_rate`, `sla_latency_p95_s`).
 
@@ -22,13 +22,13 @@ The offline runner reports:
 ## Running the evaluation
 
 ```bash
-python scripts/offline_eval.py --eval-set data/eval/offline_eval_set.json
+python scripts/offline_eval.py --eval-set hf_space/data/eval/offline_eval_set.json
 ```
 
 To include the LLM knowledge foundation checks (requires `RAG_LLM_ENDPOINT` and credentials):
 
 ```bash
-RAG_EVAL_USE_LLM=1 python scripts/offline_eval.py --eval-set data/eval/offline_eval_set.json
+RAG_EVAL_USE_LLM=1 python scripts/offline_eval.py --eval-set hf_space/data/eval/offline_eval_set.json
 ```
 
 To save a report:
@@ -40,7 +40,7 @@ python scripts/offline_eval.py --output reports/offline_eval_report.json
 If you need to avoid network downloads for embeddings, use `--local-only`:
 
 ```bash
-python scripts/offline_eval.py --local-only --eval-set data/eval/offline_eval_set.json
+python scripts/offline_eval.py --local-only --eval-set hf_space/data/eval/offline_eval_set.json
 ```
 
 The output is a JSON report that includes per-question coverage, overall metrics, and acceptance checks.
@@ -66,4 +66,4 @@ After major retrieval or judge changes, validate the following categories:
 1. Enable `RAG_EVAL_USE_LLM=1` and confirm non-zero `llm_used_count` when LLM is configured.
 2. Verify LLM abstentions align with `no_evidence` cases via `llm_abstained_count` and per-question coverage.
 
-Thresholds are defined in the evaluation set (`data/eval/offline_eval_set.json`) under `acceptance_criteria`.
+Thresholds are defined in the evaluation set (`hf_space/data/eval/offline_eval_set.json`) under `acceptance_criteria`.
